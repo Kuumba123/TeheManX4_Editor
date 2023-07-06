@@ -450,6 +450,35 @@ namespace TeheManX4
             }
             return ms.ToArray();
         }
+        public byte[] GetTriggerData()
+        {
+            int index = this.GetIndex();
+
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            for (int i = 0; i < Settings.MaxTriggers[index] + 1; i++)
+            {
+                uint addr = BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(Const.CameraTriggerPointersAddress + index * 4)));
+                uint read = BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(addr + i * 4)));
+
+                bw.Write(BitConverter.ToUInt16(PSX.exe, PSX.CpuToOffset(read)));
+                bw.Write(BitConverter.ToUInt16(PSX.exe, PSX.CpuToOffset(read + 2)));
+                bw.Write(BitConverter.ToUInt16(PSX.exe, PSX.CpuToOffset(read + 4)));
+                bw.Write(BitConverter.ToUInt16(PSX.exe, PSX.CpuToOffset(read + 6)));
+                read += 8;
+
+                while (true)
+                {
+                    ushort setting = BitConverter.ToUInt16(PSX.exe, PSX.CpuToOffset(read));
+                    bw.Write(setting);
+                    read += 2;
+                    if (setting == 0)
+                        break;
+                }
+            }
+            return ms.ToArray();
+        }
         private void LoadEnemyData(int p ,bool startEnemies = false)
         {
             try

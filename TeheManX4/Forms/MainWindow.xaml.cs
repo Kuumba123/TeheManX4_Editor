@@ -558,6 +558,21 @@ namespace TeheManX4
                     }
                 }
 
+                if (Settings.ExtractedTriggers)
+                {
+                    for (int i = 0; i < Settings.EditedTriggers.Length; i++)
+                    {
+                        if (Settings.EditedTriggers[i] == true)
+                        {
+                            foreach (var l in PSX.levels)
+                            {
+                                if (l.GetIndex() == i)
+                                    File.WriteAllBytes(PSX.filePath + "/CAMERA/" + l.arc.filename + ".BIN", l.GetTriggerData());
+                            }
+                        }
+                    }
+                }
+
             SaveExe:
                 if (File.Exists(PSX.filePath + "/SLUS_005.61"))
                 {

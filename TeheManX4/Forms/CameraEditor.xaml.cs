@@ -255,6 +255,7 @@ namespace TeheManX4.Forms
             {
                 BitConverter.GetBytes((ushort)(int)e.NewValue + 1).CopyTo(PSX.exe, dataOffset);
                 PSX.edit = true;
+                Settings.EditedTriggers[index] = true;
             }
         }
         private void SideInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e) //RLBT
@@ -271,6 +272,8 @@ namespace TeheManX4.Forms
             {
                 BitConverter.GetBytes((ushort)(int)e.NewValue).CopyTo(PSX.exe, dataOffset);
                 PSX.edit = true;
+                Settings.EditedTriggers[index] = true;
+
             }
 
         }
