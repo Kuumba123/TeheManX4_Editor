@@ -1,0 +1,57 @@
+﻿<Window x:Class="TeheManX4.Forms.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TeheManX4.Forms"
+        mc:Ignorable="d"
+        Title="TeheMan X4 Editor Settings" Height="350" Width="350" ResizeMode="NoResize" Closing="Window_Closing">
+    <Window.Resources>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="FontSize" Value="22"/>
+        </Style>
+    </Window.Resources>
+    <ScrollViewer>
+        <Grid Background="#101010">
+            <StackPanel>
+
+                <!--Redux Const.-->
+                <StackPanel Background="#191919">
+                    <Label HorizontalAlignment="Center">Redux Settings</Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="webBox" Height="30" Width="55" TextChanged="webBox_TextChanged"></TextBox>
+                    <Label>Web Server PORT</Label>
+                </StackPanel>
+
+                <!--NOPS Const.-->
+                <StackPanel Background="#191919">
+                    <Label HorizontalAlignment="Center">PS1-NOPS Settings</Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="comBox" Height="30" Width="25" TextChanged="comBox_TextChanged"></TextBox>
+                    <Label>COM-PORT</Label>
+                </StackPanel>
+                <CheckBox x:Name="useNopsCheck" Checked="useNopsCheck_Change" Unchecked="useNopsCheck_Change">Use NOPS for Reload</CheckBox>
+                <StackPanel Background="#191919">
+                    <Label HorizontalAlignment="Center">Options</Label>
+                </StackPanel>
+                <CheckBox x:Name="dontUpdateCheck" Checked="dontUpdateCheck_Change" Unchecked="dontUpdateCheck_Change">Dont check for Updates</CheckBox>
+                <CheckBox x:Name="saveReloadCheck" Checked="saveOnReloadCheck_Change" Unchecked="saveOnReloadCheck_Change">Save Current Level On Reload</CheckBox>
+                <CheckBox x:Name="ultimateCheck" Checked="ultimateCheck_Check_Change" Unchecked="ultimateCheck_Check_Change">Use Ultimate Armor File for Reload</CheckBox>
+                <CheckBox x:Name="zeroCheck" Checked="zeroCheck_CheckChange" Unchecked="zeroCheck_CheckChange">Default to Zero</CheckBox>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

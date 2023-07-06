@@ -1,0 +1,133 @@
+﻿<Window x:Class="TeheManX4.Forms.ToolsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TeheManX4.Forms"
+        mc:Ignorable="d"
+        Title="Tools Window" Height="450" Width="450" ResizeMode="NoResize">
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style TargetType="Label">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="FontSize" Value="20"/>
+            </Style>
+            <Style TargetType="Expander">
+                <Setter Property="Background" Value="#222222"/>
+                <Setter Property="Foreground" Value="White"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="Background" Value="#111111"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Padding" Value="4"/>
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid x:Name="grid" Background="#060606">
+        <ScrollViewer>
+            <StackPanel>
+                <StackPanel>
+                    <Expander IsExpanded="True">
+                        <Expander.Header>
+                            <Label>Texture Tools</Label>
+                        </Expander.Header>
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="texBmpBtn" Width="auto" Click="texBmpBtn_Click">Extract Textures as BMP</Button>
+                                <Button x:Name="texBinBtn" Grid.Column="1" Click="texBinBtn_Click">Extract Textures as BIN</Button>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="inertTexBtn" Grid.Row="1" Click="inertTexBtn_Click">Replace Texture  from BMP</Button>
+                                <Button x:Name="InsertBinBtn" Grid.Row="1" Grid.Column="1">Replace Texture from BIN</Button>
+                            </Grid>
+                            <!--<Button Click="EditCompressedTexturesButton_Click">Modify Compressed Textures</Button>-->
+                        </StackPanel>
+                    </Expander>
+                    <Expander IsExpanded="True">
+                        <Expander.Header>
+                            <Label>Sound Tools</Label>
+                        </Expander.Header>
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Button x:Name="vabExtBtn" Height="31" VerticalAlignment="Top" Click="vabExtBtn_Click">Extract VAB</Button>
+                                <Button x:Name="vabInsertBtn" Grid.Column="1" Click="vabInsertBtn_Click">Replace VAB</Button>
+                                <!--<Button x:Name="xaExtBtn" Grid.Row="1" Click="xaExtBtn_Click">Extract XA</Button>-->
+                                <Button Grid.Row="1" Grid.ColumnSpan="2" x:Name="editSoundsBtn" Click="editSoundsBtn_Click">Edit ARC Sound Settings</Button>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                            </Grid>
+                        </StackPanel>
+                    </Expander>
+                    <Expander>
+                        <Expander.Header>
+                            <Label>ISO 9660 Tools</Label>
+                        </Expander.Header>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Button x:Name="extractIsoBtn" Click="extractIsoBtn_Click">Extract ISO</Button>
+                            <Button x:Name="replaceBtn" Grid.Column="1" Click="replaceBtn_Click">Replace File</Button>
+                            <Button x:Name="fixBtn" Grid.Row="1" Grid.ColumnSpan="2" Click="fixBtn_Click">Fix MegaMan X4 PSX.EXE LBA Table</Button>
+                        </Grid>
+                    </Expander>
+                    <Expander>
+                        <Expander.Header>
+                            <Label>Other</Label>
+                        </Expander.Header>
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Button x:Name="sprtBtn" Click="sprtBtn_Click">Sprite Editor</Button>
+                                <Button x:Name="gameSettingsBtn" Grid.Column="1" Click="gameSettingsBtn_Click">Game Settings</Button>
+                                <Button Grid.Row="1" Grid.ColumnSpan="2" x:Name="editTextBtn" Click="editTextBtn_Click">Edit Player Text Data</Button>
+                                <Button Grid.Row="2" x:Name="createPacBtn" Click="createPacBtn_Click">Create New ARC</Button>
+                                <Button Grid.Row="2" x:Name="editPacBtn" Grid.Column="1" Click="editPacBtn_Click">Edit Existing ARC</Button>
+                            </Grid>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

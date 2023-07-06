@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="TeheManX4.Forms.CameraTriggerEntry"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TeheManX4.Forms"
+             mc:Ignorable="d" 
+             d:DesignHeight="35" d:DesignWidth="400">
+    <Grid Background="#101010">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        <Button Click="AddSettingButton_Click" Width="100" HorizontalAlignment="Left">Add Setting</Button>
+        <Label Grid.Column="1" FontSize="17" x:Name="countLbl"></Label>
+        <Button Grid.Column="2" Click="RemoveButton_Click">&#10005;</Button>
+    </Grid>
+</UserControl>

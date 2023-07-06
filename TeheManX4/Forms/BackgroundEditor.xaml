@@ -1,0 +1,105 @@
+﻿<UserControl x:Class="TeheManX4.Forms.BackgroundEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TeheManX4.Forms"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Slot Settings-->
+        <StackPanel>
+            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Slot Settings</Label>
+            <Border BorderBrush="White" BorderThickness="2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,21,0">ID:</Label>
+                        <local:NumInt Minimum="0" Maximum="#FE" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="idInt" ValueChanged="idInt_ValueChanged"></local:NumInt>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,2,0">Slot:</Label>
+                        <local:NumInt Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="slotInt" ValueChanged="slotInt_ValueChanged"></local:NumInt>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        
+        <!--Object Priority-->
+        <StackPanel Grid.Column="1">
+            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Object Priority</Label>
+            <Border BorderBrush="White" BorderThickness="2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,30,0">OT:</Label>
+                        <local:NumInt Minimum="0" Maximum="#B" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="otInt" ValueChanged="otInt_ValueChanged"></local:NumInt>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,18,0">Slot:</Label>
+                        <local:NumInt Minimum="0" Maximum="3" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="objectInt" ValueChanged="objectInt_ValueChanged"></local:NumInt>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        
+        
+        <!--Background OT-->
+        <StackPanel Grid.Column="2">
+            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Layer Priority</Label>
+            <Border BorderBrush="White" BorderThickness="2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,25,0" >Layer:</Label>
+                        <local:NumInt Minimum="0" Maximum="2" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="layerInt" ValueChanged="layerInt_ValueChanged"></local:NumInt>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,4,0" >Priority:</Label>
+                        <local:NumInt Minimum="0" Maximum="#B" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="priorityInt" ValueChanged="LayerInfo_ValueChanged" Uid="0"></local:NumInt>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" >Normal:</Label>
+                        <local:NumInt Minimum="0" Maximum="#B" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="normalInt" ValueChanged="LayerInfo_ValueChanged" Uid="1"></local:NumInt>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        
+        
+        <!--Scroll Type-->
+        <StackPanel Grid.Column="3">
+            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Scroll Type</Label>
+            <Border BorderBrush="White" BorderThickness="2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,0,0">BG2:</Label>
+                        <local:NumInt Minimum="0" Maximum="8" FontSize="28" Width="70" ButtonSpinnerWidth="25" Uid="0" x:Name="scroll2Int" ValueChanged="scrollInt_ValueChange"></local:NumInt>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" FontSize="26" Margin="0,0,0,0">BG3:</Label>
+                        <local:NumInt Minimum="0" Maximum="8" FontSize="28" Width="70" ButtonSpinnerWidth="25" Uid="1" x:Name="scroll3Int" ValueChanged="scrollInt_ValueChange"></local:NumInt>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        
+        <!--Trans-Type-->
+        <StackPanel Grid.Column="4">
+            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Trans Type</Label>
+            <Border BorderBrush="White" BorderThickness="2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <local:NumInt Minimum="0" Maximum="3" FontSize="28" Width="100" ButtonSpinnerWidth="25" x:Name="transInt" ValueChanged="transInt_ValueChanged"></local:NumInt>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        
+    </Grid>
+</UserControl>

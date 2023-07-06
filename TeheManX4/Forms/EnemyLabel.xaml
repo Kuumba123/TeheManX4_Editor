@@ -1,0 +1,14 @@
+﻿<UserControl x:Class="TeheManX4.Forms.EnemyLabel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TeheManX4.Forms"
+             mc:Ignorable="d" 
+             d:DesignHeight="17" d:DesignWidth="20" MinHeight="17" MinWidth="20">
+    <Grid>
+        <Border BorderBrush="Red" x:Name="border" x:FieldModifier="public" BorderThickness="1" Canvas.Left="128" Canvas.Top="128">
+            <Label x:Name="text" x:FieldModifier="public" Padding="0" Background="Black" Foreground="White" FontFamily="Consolas" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">30</Label>
+        </Border>
+    </Grid>
+</UserControl>

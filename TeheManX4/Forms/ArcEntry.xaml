@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="TeheManX4.Forms.ArcEntry"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:local="clr-namespace:TeheManX4.Forms"
+             mc:Ignorable="d" 
+             d:DesignHeight="70" d:DesignWidth="400">
+    <Border BorderBrush="White" BorderThickness="2">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal">
+                <Label Foreground="White" FontSize="18">Type</Label>
+                <local:NumInt  Width="120" ValueChanged="typeInt_ValueChanged" Grid.Column="1" FontSize="28" ButtonSpinnerWidth="30" x:Name="typeInt" Value="0" Minimum="0"></local:NumInt>
+            </StackPanel>
+            <Button Grid.Column="2" Click="deleteBtn_Click">&#10005;</Button>
+            <Button Grid.Column="3" Width="30" Name="saveBtn" Click="saveBtn_Click">&#128190;</Button>
+            <Button Grid.Column="4" Width="30" Name="openBtn" Click="openBtn_Click">&#128194;</Button>
+            <Border Grid.Row="1" BorderBrush="White" BorderThickness="1" Grid.ColumnSpan="5"></Border>
+            <TextBlock Grid.Row="2" Grid.ColumnSpan="5" Foreground="White" Name="pathBox" FontSize="14" Background="#111111"></TextBlock>
+        </Grid>
+    </Border>
+</UserControl>
