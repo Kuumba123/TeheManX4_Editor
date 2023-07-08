@@ -505,15 +505,23 @@ namespace TeheManX4.Forms
 
                         byte flags = 0;
 
-                        if(c + 1 == uiBoxes[i].Text.Length)
+                        if(c + 1 == uiBoxes[i].Text.Length) //Last Char on Line
                         {
-                            flags = 0x20;
 
-                            if (boxInt.Value == boxInt.Maximum) //End flag
-                                flags |= 0x80;
-
-                            if (i != finalLine) //New Line Flag
-                                flags |= 0x40;
+                            if (i == finalLine)
+                            {
+                                if (boxInt.Value == boxInt.Maximum) //End
+                                    flags = 0x80 + 0x20;
+                                else
+                                    flags = 0x20;
+                            }
+                            else
+                            {
+                                if ((bool)scrollChecks[i].IsChecked)
+                                    flags = 0x10;
+                                if (i != finalLine) //New Line Flag
+                                    flags |= 0x40;
+                            }
 
 
                         }
@@ -530,9 +538,10 @@ namespace TeheManX4.Forms
                 textBoxes[(int)textInt.Value].boxes[(int)boxInt.Value].data = ms.ToArray();
                 enable = false;
                 charInt.Value = 0;
-                enable = true;
+                charInt.Maximum = (textBoxes[(int)textInt.Value].boxes[(int)boxInt.Value].data.Length / 2) - 1;
                 DrawText();
                 UpdateCharInfo();
+                enable = true;
                 textWindow.Close();
             };
             Grid.SetRow(confirm, 1);
