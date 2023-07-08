@@ -15,6 +15,89 @@ namespace TeheManX4.Forms
     /// </summary>
     public partial class TextEditor : Window
     {
+        #region CONSTANTS
+        const int MaxLineLength = 20;
+        readonly Dictionary<char, byte> charTable = new Dictionary<char, byte>()
+        {
+            {'0',0x40 },
+            {'1',0x41 },
+            {'2',0x42 },
+            {'3',0x43 },
+            {'4',0x44 },
+            {'5',0x45 },
+            {'6',0x46 },
+            {'7',0x47 },
+            {'8',0x48 },
+            {'9',0x49 },
+            {'A',0x4A },
+            {'B',0x4B },
+            {'C',0x4C },
+            {'D',0x4D },
+            {'E',0x4E },
+            {'F',0x4F },
+            {'G',0x50 },
+            {'H',0x51 },
+            {'I',0x52 },
+            {'J',0x53 },
+            {'K',0x54 },
+            {'L',0x55 },
+            {'M',0x56 },
+            {'N',0x57 },
+            {'O',0x58 },
+            {'P',0x59 },
+            {'Q',0x5A },
+            {'R',0x5B },
+            {'S',0x5C },
+            {'T',0x5D },
+            {'U',0x5E },
+            {'V',0x5F },
+            {'W',0x60 },
+            {'X',0x61 },
+            {'Y',0x62 },
+            {'Z',0x63 },
+            {'a',0x64 },
+            {'b',0x65 },
+            {'c',0x66 },
+            {'d',0x67 },
+            {'e',0x68 },
+            {'f',0x69 },
+            {'g',0x6A },
+            {'h',0x6B },
+            {'i',0x6C },
+            {'j',0x6D },
+            {'k',0x6E },
+            {'l',0x6F },
+            {'m',0x70 },
+            {'n',0x71 },
+            {'o',0x72 },
+            {'p',0x73 },
+            {'q',0x74 },
+            {'r',0x75 },
+            {'s',0x76 },
+            {'t',0x77 },
+            {'u',0x78 },
+            {'v',0x79 },
+            {'w',0x7A },
+            {'x',0x7B },
+            {'y',0x7C },
+            {'z',0x7D },
+            {'/',0x7E },
+            {'↓',0x7F },
+            {'↑',0x80 },
+            {'←',0x81 },
+            {'→',0x82 },
+            {'+',0x83 },
+            {'-',0x84 },
+            {',',0x85 },
+            {'.',0x86 },
+            {'!',0x87 },
+            {'?',0x88 },
+            {'"',0x89 },
+            {'\'',0x8B },
+            {' ',0xFF }
+        };
+        #endregion CONSTANTS
+
         #region Fields
         bool enable;
         Rectangle texRectangle = null;
@@ -120,7 +203,7 @@ namespace TeheManX4.Forms
                     if ((type & 0x40) == 0x40) //Line Break
                     {
                         x = baseX;
-                        y += 16;
+                        y += 18;
                     }
                     else
                         x += 12;
@@ -347,6 +430,115 @@ namespace TeheManX4.Forms
             DrawText();
             UpdateCharInfo();
             enable = true;
+        }
+        private void AutoEditButton_Click(object sender, RoutedEventArgs e)
+        {
+            ListWindow textWindow = new ListWindow();
+            textWindow.Title = "INPUT TEXT";
+            textWindow.Width = 315;
+            textWindow.Height = 160;
+            textWindow.ResizeMode = ResizeMode.NoResize;
+            textWindow.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+
+            List<TextBox> uiBoxes = new List<TextBox>();
+            uiBoxes.Add(new TextBox() { MaxLength = MaxLineLength, MaxLines = 1, Foreground = Brushes.White , Background = Brushes.Black , FontSize = 18});
+            uiBoxes.Add(new TextBox() { MaxLength = MaxLineLength, MaxLines = 1, Foreground = Brushes.White, Background = Brushes.Black, FontSize = 18 });
+            uiBoxes.Add(new TextBox() { MaxLength = MaxLineLength, MaxLines = 1, Foreground = Brushes.White, Background = Brushes.Black, FontSize = 18 });
+
+            List<CheckBox> scrollChecks = new List<CheckBox>();
+            scrollChecks.Add(new CheckBox() { Content = "Scroll", FontSize = 18, Focusable = false});
+            scrollChecks.Add(new CheckBox() { Content = "Scroll", FontSize = 18, Focusable = false, IsChecked = true });
+            scrollChecks.Add(new CheckBox() { Content = "Scroll", FontSize = 18, Focusable = false, IsChecked = true });
+
+            textWindow.outGrid.RowDefinitions.Add(new RowDefinition());
+            textWindow.outGrid.RowDefinitions.Add(new RowDefinition());
+            textWindow.outGrid.RowDefinitions[1].Height = new GridLength(30);
+
+            textWindow.grid.ColumnDefinitions.Add(new ColumnDefinition());
+            textWindow.grid.ColumnDefinitions.Add(new ColumnDefinition());
+            textWindow.grid.ColumnDefinitions[0].Width = new GridLength(75);
+
+            for (int i = 0; i < uiBoxes.Count; i++)
+            {
+                Grid.SetColumn(uiBoxes[i], 1);
+                Grid.SetRow(uiBoxes[i], i);
+                Grid.SetColumn(scrollChecks[i], 0);
+                Grid.SetRow(scrollChecks[i], i);
+
+                textWindow.grid.RowDefinitions.Add(new RowDefinition());
+                textWindow.grid.Children.Add(uiBoxes[i]);
+                textWindow.grid.Children.Add(scrollChecks[i]);
+            }
+
+            Button confirm = new Button() { Content  = "Confirm"};
+            confirm.Click += (s, arg) => //Convert Char to VRAM XY
+            {
+                if (uiBoxes[0].Text == "" && uiBoxes[1].Text == "" && uiBoxes[2].Text == "")
+                    return;
+
+                MemoryStream ms = new MemoryStream();
+                BinaryWriter bw = new BinaryWriter(ms);
+
+                int finalLine = -1;
+                for (int i = 0; i < 3; i++) //Check for valid Char
+                {
+                    if (uiBoxes[i].Text == "") continue;
+
+                    finalLine = i;
+                    foreach (var c in uiBoxes[i].Text)
+                    {
+                        if (!charTable.ContainsKey(c))
+                        {
+                            MessageBox.Show("The char '" + c + "' on line " + (i + 1) + " is not a valid character");
+                            return;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < 3; i++) //Create Data
+                {
+                    if (uiBoxes[i].Text == "") continue;
+
+                    for (int c = 0; c < uiBoxes[i].Text.Length; c++)
+                    {
+                        bw.Write(charTable[uiBoxes[i].Text[c]]); //Write Char
+
+                        byte flags = 0;
+
+                        if(c + 1 == uiBoxes[i].Text.Length)
+                        {
+                            flags = 0x20;
+
+                            if (boxInt.Value == boxInt.Maximum) //End flag
+                                flags |= 0x80;
+
+                            if (i != finalLine) //New Line Flag
+                                flags |= 0x40;
+
+
+                        }
+                        else
+                        {
+                            if ((bool)scrollChecks[i].IsChecked)
+                                flags = 0x10;
+                        }
+                        bw.Write(flags);
+                    }
+                }
+
+                //Done
+                textBoxes[(int)textInt.Value].boxes[(int)boxInt.Value].data = ms.ToArray();
+                enable = false;
+                charInt.Value = 0;
+                enable = true;
+                DrawText();
+                UpdateCharInfo();
+                textWindow.Close();
+            };
+            Grid.SetRow(confirm, 1);
+            textWindow.outGrid.Children.Add(confirm);
+
+            textWindow.ShowDialog();
         }
         private void textTextureImg_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {

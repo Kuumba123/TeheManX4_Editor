@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TeheManX4.Forms"
         mc:Ignorable="d"
-        Title="TeheMan X4 Text Editor - " Height="730" Width="800" ResizeMode="NoResize">
+        Title="TeheMan X4 Text Editor - " Height="730" Width="720" ResizeMode="NoResize">
     <Window.Resources>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="White"/>
@@ -44,7 +44,8 @@
             <Button Width="90" Style="{StaticResource TileButton}" Click="InsertButton_Click">Insert Box</Button>
             <Button Width="70" Style="{StaticResource TileButton}" Click="AddButton_Click">Add Box</Button>
             <Button Width="80" Style="{StaticResource TileButton}" Click="AddCharButton_Click">Add Char</Button>
-            <Button Width="105" Style="{StaticResource TileButton}" Click="RemoveCharButton_Click">Remove Char</Button>
+            <Button Width="150" Style="{StaticResource TileButton}" Click="RemoveCharButton_Click">Remove Cur Char</Button>
+            <Button Width="110" Style="{StaticResource TileButton}" Click="AutoEditButton_Click">Auto Edit Text</Button>
         </StackPanel>
         <Grid Background="Black" Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -64,28 +65,26 @@
                 </Canvas>
             </Border>
 
-            <!--GeneralControls-->
-            <StackPanel Grid.Column="1">
-                <StackPanel Orientation="Horizontal">
-                    <local:NumInt x:Name="textInt" Minimum="0" ValueChanged="textInt_ValueChanged"></local:NumInt>
-                    <Label>TextBox</Label>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <local:NumInt x:Name="boxInt" Minimum="0" ValueChanged="boxInt_ValueChanged"></local:NumInt>
-                    <Label>Box</Label>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <local:NumInt x:Name="charInt" Minimum="0" ValueChanged="charInt_ValueChanged"></local:NumInt>
-                    <Label>Char</Label>
-                </StackPanel>
-            </StackPanel>
 
             <!--Char Controls-->
             <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom">
+
                 <CheckBox x:Name="endCheck" Checked="endCheck_CheckChange" Unchecked="endCheck_CheckChange">End</CheckBox>
                 <CheckBox x:Name="lineCheck" Checked="lineCheck_CheckChange" Unchecked="lineCheck_CheckChange">Line Break</CheckBox>
                 <CheckBox x:Name="newCheck" Checked="newCheck_CheckChange" Unchecked="newCheck_CheckChange">End Box</CheckBox>
                 <CheckBox x:Name="scrollCheck" Checked="scrollCheck_CheckChange" Unchecked="scrollCheck_CheckChange">Scrollable</CheckBox>
+                <StackPanel Orientation="Horizontal">
+                    <local:NumInt ButtonSpinnerWidth="20" Width="60" x:Name="textInt" Minimum="0" ValueChanged="textInt_ValueChanged"></local:NumInt>
+                    <Label>TextBox</Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <local:NumInt ButtonSpinnerWidth="20" Width="60" x:Name="boxInt" Minimum="0" ValueChanged="boxInt_ValueChanged"></local:NumInt>
+                    <Label>Box</Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <local:NumInt ButtonSpinnerWidth="20" Width="60" x:Name="charInt" Minimum="0" ValueChanged="charInt_ValueChanged"></local:NumInt>
+                    <Label>Char</Label>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <local:NumInt Width="70" x:Name="valInt" Minimum="0" Maximum="#FFFF" ValueChanged="valInt_ValueChanged"></local:NumInt>
                     <Label>Char Value</Label>
