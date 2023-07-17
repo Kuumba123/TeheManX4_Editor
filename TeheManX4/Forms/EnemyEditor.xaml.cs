@@ -169,6 +169,10 @@ namespace TeheManX4.Forms
             byte range = ((Enemy)((EnemyLabel)control.Tag).Tag).range;
             if (e.ChangedButton == MouseButton.Left)
             {
+                if (Level.enemyExpand)
+                    PSX.levels[Level.Id].edit = true;
+                else
+                    PSX.edit = true;
                 if (!down)
                 {
 
@@ -242,6 +246,7 @@ namespace TeheManX4.Forms
                 return;
             ((Enemy)((EnemyLabel)control.Tag).Tag).type = (byte)((int)e.NewValue & 0xFF);
             ((EnemyLabel)control.Tag).AssignTypeBorder(((Enemy)((EnemyLabel)control.Tag).Tag).type);
+            UpdateEnemyName(((Enemy)((EnemyLabel)control.Tag).Tag).type, ((Enemy)((EnemyLabel)control.Tag).Tag).id);
         }
         private void rangeInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
@@ -256,8 +261,19 @@ namespace TeheManX4.Forms
                 MessageBox.Show("There are not suppoused to be enemies in this level");
                 return;
             }
+            if (Level.enemyExpand)
+            {
+                if(PSX.levels[Level.Id].enemies.Count == 255)
+                {
+                    MessageBox.Show("Max amount of regular enemies is 255");
+                    return;
+                }
+            }
             //Add Enemy
-            PSX.edit = true;
+            if (Level.enemyExpand)
+                PSX.levels[Level.Id].edit = true;
+            else
+                PSX.edit = true;
             var en = new Enemy();
             en.x = (short)(viewerX + 0x100);
             en.y = (short)(viewerY + 0x100);
@@ -272,10 +288,18 @@ namespace TeheManX4.Forms
                 return;
             PSX.levels[Level.Id].enemies.Remove((Enemy)((EnemyLabel)control.Tag).Tag);
             DrawEnemies();
-            PSX.edit = true;
+            if (Level.enemyExpand)
+                PSX.levels[Level.Id].edit = true;
+            else
+                PSX.edit = true;
         }
         private void ToolsBtn_Click(object sender, RoutedEventArgs e)
         {
+            if(PSX.levels[Level.Id].GetIndex() > 25)
+            {
+                MessageBox.Show("There are not suppoused to be enemies in this level");
+                return;
+            }
             ListWindow l = new ListWindow(3);
             l.ShowDialog();
         }
@@ -308,7 +332,10 @@ namespace TeheManX4.Forms
             var en = (Enemy)((EnemyLabel)obj).Tag;
             en.x = (short)((short)((viewerX & 0x1F00) + x) + Const.EnemyOffset);
             en.y = (short)((short)((viewerY & 0x1F00) + y) + Const.EnemyOffset);
-            PSX.edit = true;
+            if (Level.enemyExpand)
+                PSX.levels[Level.Id].edit = true;
+            else
+                PSX.edit = true;
         }
 
         private void canvas_PreviewMouseUp(object sender, MouseButtonEventArgs e)

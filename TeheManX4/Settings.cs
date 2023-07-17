@@ -18,6 +18,7 @@ namespace TeheManX4
         public static uint levelStartAddress;
         public static uint levelScreenAddress;
         public static uint levelTileAddress;
+        public static uint levelEnemyAddress;
         public static int levelSize;
         public static int playerFileSize;
 

@@ -4,10 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:dragablz="http://dragablz.net/winfx/xaml/dragablz"
+        xmlns:dockablz="clr-namespace:Dragablz.Dockablz;assembly=Dragablz"
         xmlns:local="clr-namespace:TeheManX4"
-        xmlns:forms="clr-namespace:TeheManX4.Forms"
+        xmlns:forms="clr-namespace:TeheManX4.Forms" xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="TeheMan X4 Editor" Width="1205" Height="930" MinWidth="700" MinHeight="523" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" Loaded="Window_Loaded" MouseDown="Window_MouseDown">
+        Title="TeheMan X4 Editor" Width="1205" Height="930" MinWidth="700" MinHeight="520" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" Loaded="Window_Loaded" MouseDown="Window_MouseDown">
+    <Window.Resources>
+        <system:String x:Key="Partition">QuickStart</system:String>
+    </Window.Resources>
     <Grid Name="grid" Background="Black">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -25,60 +29,63 @@
             <Button Name="sizeBtn" Style="{StaticResource ToolButton}" Click="sizeBtn_Click">Size</Button>
             <Button Name="filesBtn" Style="{StaticResource ToolButton}" Click="filesBtn_Click">Files</Button>
             <Button Name="helpBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="helpBtn_Click">Help</Button>
+            <Button Name="undoBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="undoBtn_Click">Undo</Button>
         </DockPanel>
+        <dockablz:Layout x:Name="dock" Partition="{StaticResource Partition}" Grid.Row="1" Foreground="Blue">
+            <dragablz:TabablzControl Name="hub" Visibility="Hidden" Focusable="False" ConsolidateOrphanedItems="True">
+                <dragablz:TabablzControl.InterTabController>
+                    <dragablz:InterTabController Partition="{StaticResource Partition}" />
+                </dragablz:TabablzControl.InterTabController>
 
-        <dragablz:TabablzControl Grid.Row="1" Name="hub" Visibility="Hidden" ConsolidateOrphanedItems="True" Background="Black" Focusable="False">
-            <dragablz:TabablzControl.InterTabController>
-                <dragablz:InterTabController/>
-            </dragablz:TabablzControl.InterTabController>
-            <TabItem Name="layoutTab" IsSelected="True">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">Layout</Button>
-                </TabItem.Header>
-                <forms:LayoutEditor x:Name="layoutE" x:FieldModifier="public"/>
-            </TabItem>
-            <TabItem Name="screenTab">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">Screen</Button>
-                </TabItem.Header>
-                <forms:ScreenEditor x:Name="screenE" x:FieldModifier="public"/>
-            </TabItem>
-            <TabItem Name="x16Tab" x:FieldModifier="public">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">16x16</Button>
-                </TabItem.Header>
-                <forms:Tile16Editor x:Name="x16E" x:FieldModifier="public"/>
-            </TabItem>
-            <TabItem Name="clutTab">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">CLUT</Button>
-                </TabItem.Header>
-                <forms:ClutEditor x:Name="clutE" x:FieldModifier="public"/>
-            </TabItem>
-            <TabItem Name="enemyTab">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">Enemy</Button>
-                </TabItem.Header>
-                <forms:EnemyEditor x:Name="enemyE"/>
-            </TabItem>
-            <TabItem Name="spawnTab">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">Spawn</Button>
-                </TabItem.Header>
-                <forms:SpawnWindow x:Name="spawnE"/>
-            </TabItem>
-            <TabItem Name="bgTab">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">Background</Button>
-                </TabItem.Header>
-                <forms:BackgroundEditor x:Name="bgE"/>
-            </TabItem>
-            <TabItem Name="camTab">
-                <TabItem.Header>
-                    <Button Style="{StaticResource TabButton}">Camera</Button>
-                </TabItem.Header>
-                <forms:CameraEditor x:Name="camE"/>
-            </TabItem>
-        </dragablz:TabablzControl>       
+                <TabItem Name="layoutTab" IsSelected="True">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Layout</Button>
+                    </TabItem.Header>
+                    <forms:LayoutEditor x:Name="layoutE" x:FieldModifier="public"/>
+                </TabItem>
+                <TabItem Name="screenTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Screen</Button>
+                    </TabItem.Header>
+                    <forms:ScreenEditor x:Name="screenE" x:FieldModifier="public"/>
+                </TabItem>
+                <TabItem Name="x16Tab" x:FieldModifier="public">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">16x16</Button>
+                    </TabItem.Header>
+                    <forms:Tile16Editor x:Name="x16E" x:FieldModifier="public"/>
+                </TabItem>
+                <TabItem Name="clutTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">CLUT</Button>
+                    </TabItem.Header>
+                    <forms:ClutEditor x:Name="clutE" x:FieldModifier="public"/>
+                </TabItem>
+                <TabItem Name="enemyTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Enemy</Button>
+                    </TabItem.Header>
+                    <forms:EnemyEditor x:Name="enemyE"/>
+                </TabItem>
+                <TabItem Name="spawnTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Spawn</Button>
+                    </TabItem.Header>
+                    <forms:SpawnWindow x:Name="spawnE"/>
+                </TabItem>
+                <TabItem Name="bgTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Background</Button>
+                    </TabItem.Header>
+                    <forms:BackgroundEditor x:Name="bgE"/>
+                </TabItem>
+                <TabItem Name="camTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Camera</Button>
+                    </TabItem.Header>
+                    <forms:CameraEditor x:Name="camE"/>
+                </TabItem>
+            </dragablz:TabablzControl>
+        </dockablz:Layout>
     </Grid>
 </Window>

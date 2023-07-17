@@ -197,7 +197,7 @@ namespace TeheManX4.Forms
                             mode++;
                         return;
                     }
-                    else if (mode == 48)    //Done
+                    else if (mode == 50)    //Done
                     {
                         if (Settings.nops.HasExited)
                         {
@@ -363,6 +363,11 @@ namespace TeheManX4.Forms
                             break;
                         case 24:
                             {
+                                if (Level.enemyExpand)
+                                {
+                                    mode += 2;
+                                    break;
+                                }
                                 int indexC = index;
                                 if (PSX.levels[Level.Id].isMid())
                                     indexC--;
@@ -389,6 +394,11 @@ namespace TeheManX4.Forms
                         case 28:
                             if (PSX.levels[Level.Id].GetId() != 0xA)
                             {
+                                if (Level.enemyExpand)
+                                {
+                                    mode += 2;
+                                    break;
+                                }
                                 int indexC = index;
                                 if (PSX.levels[Level.Id].isMid())
                                     indexC++;
@@ -516,6 +526,29 @@ namespace TeheManX4.Forms
 
                                 Settings.nops.CancelOutputRead();
                                 PSX.SerialWrite(Const.CameraTriggerFreeDataAddress, data);
+                                Settings.nops.BeginOutputReadLine();
+                                mode++;
+                            }
+                            else
+                                mode += 2;
+                            break;
+
+                        case 48:
+                            if (Level.enemyExpand)
+                            {
+                                if (single && tab != "enemyTab")
+                                {
+                                    mode += 2;
+                                    return;
+                                }
+                                if (!Level.enemyExpand)
+                                {
+                                    mode += 2;
+                                    return;
+                                }
+                                Settings.nops.CancelOutputRead();
+                                PSX.SerialWrite(Settings.levelEnemyAddress, Level.CreateEnemyData(PSX.levels[Level.Id].enemies));
+                                this.Title = "Writting Expanded Enemy Data";
                                 Settings.nops.BeginOutputReadLine();
                                 mode++;
                             }
@@ -886,9 +919,15 @@ namespace TeheManX4.Forms
             {
                 try
                 {
+                    //Edit & Save Undo
+                    if (LayoutEditor.undos.Count == Const.MaxUndo)
+                        LayoutEditor.undos.RemoveAt(0);
+                    LayoutEditor.undos[Level.Id].Add(Undo.CreateLayoutUndo(layoutOffset));
+
                     PSX.levels[Level.Id].layout[layoutOffset] = (byte)integer.Value;
                     PSX.levels[Level.Id].edit = true;
-                    MainWindow.window.layoutE.DrawLayout();
+                    MainWindow.window.layoutE.DrawLayout(true);
+                    MainWindow.window.enemyE.Draw();
                 }
                 catch (Exception ex)
                 {
@@ -983,9 +1022,21 @@ namespace TeheManX4.Forms
                 else
                     rect.Fill = Brushes.Blue;
             };
+            Button bt4 = new Button()
+            {
+                Content = "Show Collision",
+                Width = 115,
+                Style = Application.Current.FindResource("TileButton") as Style
+            };
+            bt4.Click += (s, e) =>
+            {
+                MainWindow.window.ToggleCollision();
+            };
+
             dock.Children.Add(bt1);
             dock.Children.Add(bt2);
             dock.Children.Add(bt3);
+            dock.Children.Add(bt4);
             dock.Children.Add(rect);
             this.pannel.Children.Insert(0, dock);
 
@@ -1102,7 +1153,7 @@ namespace TeheManX4.Forms
                 }
             }
         }
-        private void EnemyTools() //Export Enemies for Enemy Tab etc [TODO: Load Enemies from EXE]
+        private void EnemyTools() //Start Enemies , etc
         {
             this.Title = PSX.levels[Level.Id].arc.filename + " Start Enemies: " + PSX.levels[Level.Id].startEnemies.Count.ToString();
             this.Width = 785;
@@ -1190,6 +1241,94 @@ namespace TeheManX4.Forms
                 PSX.edit = true;
             };
 
+            Button expan = new Button()
+            {
+                Width = 155,
+                Height = 40,
+                FontSize = 20,
+                Margin = new Thickness(5, 2, 10, 0),
+                Content = "Expand Enemies"
+            };
+            expan.Click += (s, e) =>
+            {
+                if (Level.enemyExpand)
+                {
+                    MessageBox.Show("You already have the expansion");
+                    return;
+                }
+                else
+                {
+                    MessageBoxResult result = MessageBox.Show("Would you like to enable the enemy expansion patch? " +
+                        "Normally the game keeps its enemy data in the PSX.EXE and theres a limit per 1st-half + 2nd-half. " +
+                        "This patch will allow you to put up to 255 enemies per single level by using the unused ARC entry type 0x14.", "Expansion", MessageBoxButton.YesNo);
+                    if (result != MessageBoxResult.Yes) return;
+
+                    bool removeUnused = false;
+
+                    result = MessageBox.Show("Would you also like to remove that unused ARC entry  type 0xB as well as fix " +
+                        "the Arc entry order for the screen/tile-info data? This will help speed up loads and save CPU-RAM.", "Remove Unused", MessageBoxButton.YesNo);
+                    if (result == MessageBoxResult.Yes)
+                        removeUnused = true;
+
+                    foreach (var l in PSX.levels)
+                    {
+                        int index = l.GetIndex();
+                        if (index < 26 || l.arc.ContainsEntry(0xB))
+                        {
+                            ARC arc = l.arc;
+
+                            if (removeUnused) //also fix entry 0 & 1 order
+                            {
+                                if (l.arc.ContainsEntry(0xB))
+                                    arc.entries.RemoveAt(arc.GetIndexOfType(0xB));
+
+                                byte[] screenData = arc.LoadEntry(0);
+                                byte[] tileInfo = arc.LoadEntry(1);
+
+                                arc.entries.RemoveAt(arc.GetIndexOfType(0));
+                                arc.entries.RemoveAt(arc.GetIndexOfType(1));
+
+                                arc.entries.Add(new Entry() { type = 0, data = screenData });
+                                arc.entries.Add(new Entry() { type = 1, data = tileInfo });
+                            }
+
+                            if(index < 26)
+                            {
+                                while (l.enemies.Count > 255)
+                                {
+                                    int o = l.enemies.Count;
+                                    l.enemies.RemoveAt(o);
+                                }
+
+                                arc.entries.Add(new Entry() { type = 0x14, data = Level.CreateEnemyData(l.enemies) });
+                            }
+
+                            //Edits Finished
+                            l.edit = true;
+                            l.arc = arc;
+                        }
+                    }
+                    byte[] clearBIN = new byte[]
+                    {
+                    0x80, 0x1F, 0x02, 0x3C, 0x17, 0x80, 0x04, 0x3C, 0x44, 0x00, 0x43, 0x8C,
+                    0xCC, 0x21, 0x82, 0x90, 0xCD, 0x21, 0x84, 0x90, 0x40, 0x10, 0x02, 0x00,
+                    0x21, 0x10, 0x44, 0x00, 0x80, 0x10, 0x02, 0x00, 0x0F, 0x80, 0x04, 0x3C,
+                    0x21, 0x10, 0x82, 0x00, 0xC8, 0x43, 0x43, 0xAC, 0xFF, 0x00, 0x04, 0x24,
+                    0x03, 0x00, 0x62, 0x90, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x44, 0x14,
+                    0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0xE0, 0x03, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x62, 0x90, 0x08, 0x00, 0x63, 0x24, 0x70, 0x00, 0x42, 0x30,
+                    0xF6, 0xFF, 0x00, 0x10, 0xF8, 0xFF, 0x62, 0xA0
+                    };
+                    clearBIN.CopyTo(PSX.exe, PSX.CpuToOffset(0x80028db4));
+
+                    //Done
+                    PSX.edit = true;
+                    Level.enemyExpand = true;
+                    MainWindow.window.enemyE.DrawEnemies();
+                    MessageBox.Show("Expansion Enabled! Make sure to hit save and rebuild the disc before using the Reload function.");
+                }
+            };
+
             //Delete All
             Button delete = new Button()
             {
@@ -1221,6 +1360,7 @@ namespace TeheManX4.Forms
             Grid.SetRow(stackP, 1);
 
             stackP.Children.Add(nameLbl);
+            stackP.Children.Add(expan);
             stackP.Children.Add(delete);
             stackP.Children.Add(rmvBtn);
             stackP.Children.Add(addBtn);
@@ -1794,7 +1934,7 @@ namespace TeheManX4.Forms
                     File.WriteAllBytes(PSX.filePath + "/CAMERA/" + fileName + ".BIN", ms.ToArray());
                 }
                 //Done
-                Settings.DefineCheckpoints();
+                Settings.DefineBoxes();
                 MessageBox.Show("Camera Setting Sizes Edited!");
                 MainWindow.window.camE.SetupCheckValues();
                 this.Close();

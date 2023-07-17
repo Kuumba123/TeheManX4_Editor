@@ -9,10 +9,10 @@ namespace TeheManX4.Forms
     public partial class SizeWindow : Window
     {
 
-        #region Fields
+        #region Properties
         bool enable;
         bool change;
-        #endregion Fields
+        #endregion Properties
 
         #region Constructors
         public SizeWindow()
@@ -23,19 +23,11 @@ namespace TeheManX4.Forms
                 MainWindow.layoutWindow.Close();
             if (ListWindow.extraOpen)
                 MainWindow.extraWindow.Close();
-            this.Title = PSX.levels[Level.Id].arc.filename + " Size Info";
+            Title = PSX.levels[Level.Id].arc.filename + " Size Info";
 
-            //Setup RAM Size
-            int size = 0;
-            foreach (var e in PSX.levels[Level.Id].arc.entries)
-            {
-                if ((e.type >> 0x10) != 0)
-                    continue;
-                size += e.data.Length;
-                if(e.type == 0)
-                    size += e.data.Length;
-            }
-            cpuSizeLbl.Content = "Size in CPU RAM: " + Convert.ToString(size, 16).ToUpper();
+            //Setup Labels
+            UpdateSize();
+            enemyCountLbl.Content = "Total Enemies: " + PSX.levels[Level.Id].enemies.Count.ToString();
 
             //Setup other Ints
             screenInt.Value = PSX.levels[Level.Id].screenData.Length / 0x200;
@@ -47,11 +39,28 @@ namespace TeheManX4.Forms
         }
         #endregion Constructors
 
+        #region Methoids
+        private void UpdateSize()
+        {
+            int size = 0;
+            foreach (var e in PSX.levels[Level.Id].arc.entries)
+            {
+                if ((e.type >> 0x10) != 0)
+                    continue;
+                size += e.data.Length;
+                if (e.type == 0)
+                    size += e.data.Length;
+            }
+            cpuSizeLbl.Content = "Size in CPU RAM: " + Convert.ToString(size, 16).ToUpper();
+        }
+        #endregion Methoids
+
         #region Events
         private void Int_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (!enable) return;
             change = true;
+            UpdateSize();
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -85,8 +94,14 @@ namespace TeheManX4.Forms
 
                 PSX.levels[Level.Id].edit = true;
                 PSX.edit = true;
+                Undo.ClearLevelUndos();
                 MainWindow.window.Update();
             }
+        }
+        private void HelpButton_Click(object sender, RoutedEventArgs e)
+        {
+            HelpWindow h = new HelpWindow(5);
+            h.ShowDialog();
         }
         #endregion Events
     }

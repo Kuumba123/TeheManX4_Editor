@@ -61,6 +61,11 @@ namespace TeheManX4.Forms
 
             while (true)
             {
+                if(max > 0xFF)
+                {
+                    System.Windows.MessageBox.Show("Invalid Slot List for " + PSX.levels[Level.Id].arc.filename);
+                    System.Windows.Application.Current.Shutdown();
+                }
                 if (PSX.exe[slotsOffset] == 0xFF)
                     break;
                 max++;

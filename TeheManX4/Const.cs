@@ -7,12 +7,14 @@ namespace TeheManX4
     static class Const
     {
         public static readonly string reproURL = "https://api.github.com/repos/Kuumba123/TeheManX4_Editor/releases/latest";
-        public const string Version = "1.0";
+        public const string Version = "1.1";
         public static readonly string[] pastVersions =
         {
+            "1.1",
             "1.0"
         };
         public const byte FilesCount = 40;
+        public const int MaxUndo = 512;
         public const long Crc = 0x8E9397EA;
         public static readonly int[] CordTabe =
         {

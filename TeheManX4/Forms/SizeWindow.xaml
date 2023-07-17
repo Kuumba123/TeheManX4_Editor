@@ -36,24 +36,25 @@
             </Grid.RowDefinitions>
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <local:NumInt Minimum="1" Maximum="#F0" x:Name="screenInt" ValueChanged="Int_ValueChanged"></local:NumInt>
+                    <local:NumInt Minimum="1" Maximum="#100" x:Name="screenInt" ValueChanged="Int_ValueChanged"></local:NumInt>
                     <Label>Screen Count</Label>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <local:NumInt Maximum="#1000" x:Name="tileInt" ValueChanged="Int_ValueChanged"></local:NumInt>
+                    <local:NumInt Maximum="#4000" x:Name="tileInt" ValueChanged="Int_ValueChanged"></local:NumInt>
                     <Label>Tile Count</Label>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <local:NumInt Maximum="#FF" x:Name="widthInt" ValueChanged="Int_ValueChanged"></local:NumInt>
+                    <local:NumInt Minimum="2" Maximum="#FF" x:Name="widthInt" ValueChanged="Int_ValueChanged"></local:NumInt>
                     <Label>Layout Width</Label>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <local:NumInt Maximum="#FF" x:Name="heightInt" ValueChanged="Int_ValueChanged"></local:NumInt>
+                    <local:NumInt Minimum="1" Maximum="#FF" x:Name="heightInt" ValueChanged="Int_ValueChanged"></local:NumInt>
                     <Label>Layout Height</Label>
                 </StackPanel>
                 <Label x:Name="cpuSizeLbl"></Label>
-                <Label x:Name="totalSizeLbl"></Label>
+                <Label x:Name="enemyCountLbl"></Label>
             </StackPanel>
+            <Button Grid.Row="1" HorizontalAlignment="Right" Width="25" Height="25" Padding="0" Margin="3" Click="HelpButton_Click">?</Button>
         </Grid>
     </ScrollViewer>
 </Window>

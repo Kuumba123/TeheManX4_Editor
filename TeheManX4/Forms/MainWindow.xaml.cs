@@ -60,6 +60,8 @@ namespace TeheManX4
                         Application.Current.Shutdown();
                     }
                 }
+                Level.LoadCollisionTiles();
+
                 //Get Arguments
                 string[] args = Environment.GetCommandLineArgs();
 
@@ -109,7 +111,7 @@ namespace TeheManX4
 
                     Settings.DefineBoxes();
                     Settings.DefineCheckpoints();
-
+                    Undo.CreateUndoList();
                     Level.Id = 0;
                     Level.AssignPallete();
                     PSX.levels[Level.Id].LoadTextures();
@@ -132,6 +134,7 @@ namespace TeheManX4
         #region Methods
         public void Update()
         {
+            //Update Everything Else
             window.layoutE.AssignLimits();
             window.screenE.AssignLimits();
             window.x16E.AssignLimits();
@@ -217,7 +220,7 @@ namespace TeheManX4
 
                 Settings.DefineBoxes();
                 Settings.DefineCheckpoints();
-
+                Undo.CreateUndoList();
                 Level.Id = 0;
                 Level.AssignPallete();
                 PSX.levels[Level.Id].LoadTextures();
@@ -227,6 +230,60 @@ namespace TeheManX4
                 window.camE.SetupBorderInfo();
                 hub.Visibility = Visibility.Visible;
             }
+        }
+        private void ProcessUndo()
+        {
+            if (hub.SelectedItem != null)
+            {
+                switch (((TabItem)hub.SelectedItem).Name)
+                {
+                    case "layoutTab":
+                        if (LayoutEditor.undos[Level.Id].Count != 0)
+                        {
+                            int o = LayoutEditor.undos[Level.Id].Count - 1;
+                            LayoutEditor.undos[Level.Id][o].ApplyLayoutUndo();
+                            LayoutEditor.undos[Level.Id].RemoveAt(o);
+                        }
+                        break;
+                    case "screenTab":
+                        if(ScreenEditor.undos[Level.Id].Count != 0)
+                        {
+                            int o = ScreenEditor.undos[Level.Id].Count - 1;
+                            ScreenEditor.undos[Level.Id][o].ApplyScreenUndo();
+                            ScreenEditor.undos[Level.Id].RemoveAt(o);
+                        }
+                        break;
+                    case "x16Tab":
+                        if (Tile16Editor.undos[Level.Id].Count != 0)
+                        {
+                            int o = Tile16Editor.undos[Level.Id].Count - 1;
+                            Tile16Editor.undos[Level.Id][o].ApplyTilesUndo();
+                            Tile16Editor.undos[Level.Id].RemoveAt(o);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        internal void ToggleCollision()
+        {
+            if (Level.showCollision)
+                Level.showCollision = false;
+            else
+                Level.showCollision = true;
+
+            window.layoutE.DrawLayout();
+            window.layoutE.DrawScreen();
+
+            window.screenE.DrawScreen();
+            window.screenE.DrawTiles();
+            window.screenE.DrawTile();
+
+            window.x16E.DrawTiles();
+            window.x16E.DrawTile();
+
+            window.enemyE.Draw();
         }
         private void MainKeyCheck(string key)
         {
@@ -273,14 +330,15 @@ namespace TeheManX4
         {
             if(key == "Delete")
             {
-                var result = MessageBox.Show("Are you sure you want to delete all of Layer " + (Level.BG + 1) + "?", "", MessageBoxButton.YesNo);
+                var result = MessageBox.Show("Are you sure you want to delete all of Layer " + (Level.BG + 1) + "?\nThis cant be un-done", "", MessageBoxButton.YesNo);
 
                 if(result == MessageBoxResult.Yes)
                 {
+                    LayoutEditor.undos[Level.Id].Clear();
                     for (int i = 0; i < PSX.levels[Level.Id].size; i++)
                         PSX.levels[Level.Id].layout[i + PSX.levels[Level.Id].size * Level.BG] = 0;
                     PSX.edit = true;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     if (ListWindow.screenViewOpen)
                         layoutWindow.DrawScreens();
                 }
@@ -293,7 +351,7 @@ namespace TeheManX4
                 if (window.layoutE.viewerY != 0)
                 {
                     window.layoutE.viewerY -= 0x100;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     UpdateViewrCam();
                 }
             }
@@ -302,7 +360,7 @@ namespace TeheManX4
                 if ((window.layoutE.viewerY >> 8) < (PSX.levels[Level.Id].height - 3))
                 {
                     window.layoutE.viewerY += 0x100;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     UpdateViewrCam();
                 }
             }
@@ -311,7 +369,7 @@ namespace TeheManX4
                 if ((window.layoutE.viewerX >> 8) < (PSX.levels[Level.Id].width - 3))
                 {
                     window.layoutE.viewerX += 0x100;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     UpdateViewrCam();
                 }
             }
@@ -320,7 +378,7 @@ namespace TeheManX4
                 if (window.layoutE.viewerX != 0)
                 {
                     window.layoutE.viewerX -= 0x100;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     UpdateViewrCam();
                 }
             }
@@ -377,6 +435,9 @@ namespace TeheManX4
             //Clear Screen
             if (key == "Delete")
             {
+                if (ScreenEditor.undos.Count == Const.MaxUndo)
+                    ScreenEditor.undos.RemoveAt(0);
+                ScreenEditor.undos[Level.Id].Add(Undo.CreateGroupScreenEditUndo((byte)window.screenE.screenId, 0, 0, 16, 16));
                 Array.Clear(PSX.levels[Level.Id].screenData, window.screenE.screenId * 0x200, 0x200);
                 PSX.levels[Level.Id].edit = true;
                 window.layoutE.DrawLayout();
@@ -424,7 +485,10 @@ namespace TeheManX4
             {
                 PSX.levels[Level.Id].enemies.Remove((Enemy)((EnemyLabel)window.enemyE.control.Tag).Tag);
                 window.enemyE.DrawEnemies();
-                PSX.edit = true;
+                if (Level.enemyExpand)
+                    PSX.levels[Level.Id].edit = true;
+                else
+                    PSX.edit = true;
                 return;
             }
             if (!notFocus)  //check if NumInt is focused
@@ -671,16 +735,20 @@ namespace TeheManX4
                         Array.Copy(PSX.exe, enemyDataOffset, data, 0, Const.MaxEnemies[id] * 8 + dummyPad);
                         await Redux.Write(PSX.OffsetToCpu(enemyDataOffset), data);
                         //Fix Pointers
-                        await Redux.Write(PSX.OffsetToCpu(Const.EnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.EnemyDataPointersOffset + index * 4));
+                        if(!Level.enemyExpand)
+                            await Redux.Write(PSX.OffsetToCpu(Const.EnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.EnemyDataPointersOffset + index * 4));
                         await Redux.Write(PSX.OffsetToCpu(Const.StartEnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.StartEnemyDataPointersOffset + index * 4));
                         if (id != 9 && id != 0xA) //2nd Half
                         {
                             index++;
-
-                            await Redux.Write(PSX.OffsetToCpu(Const.EnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.EnemyDataPointersOffset + index * 4));
+                            if (!Level.enemyExpand)
+                                await Redux.Write(PSX.OffsetToCpu(Const.EnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.EnemyDataPointersOffset + index * 4));
                             await Redux.Write(PSX.OffsetToCpu(Const.StartEnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.StartEnemyDataPointersOffset + index * 4));
                         }
                         index = PSX.levels[Level.Id].GetIndex();
+
+                        if (Level.enemyExpand)
+                            await Redux.Write(Settings.levelEnemyAddress, Level.CreateEnemyData(PSX.levels[Level.Id].enemies));
 
                         //Camera
                         data = new byte[0x7FC];
@@ -926,6 +994,12 @@ namespace TeheManX4
                 }else if(key == "E" && PSX.levels.Count == Const.FilesCount)
                 {
                     ReLoad(true);
+                }else if(key == "Z" && PSX.levels.Count == Const.FilesCount)
+                {
+                    ProcessUndo();
+                }else if(key == "C" && PSX.levels.Count == Const.FilesCount && Keyboard.FocusedElement.GetType() != typeof(Xceed.Wpf.Toolkit.WatermarkTextBox))
+                {
+                    ToggleCollision();
                 }
                 else if (key == "Left" && PSX.levels.Count == Const.FilesCount && this.hub.Items.Count > 1)
                 {
@@ -1026,6 +1100,11 @@ namespace TeheManX4
             HelpWindow h = new HelpWindow(0);
             h.ShowDialog();
         }
+        private void undoBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (PSX.levels.Count == Const.FilesCount)
+                ProcessUndo();
+        }
         private void reloadBtn_Click(object sender, RoutedEventArgs e)
         {
             if (PSX.levels.Count == Const.FilesCount)
@@ -1050,6 +1129,6 @@ namespace TeheManX4
                 });
             }
         }
-#endregion Events
+        #endregion Events
     }
 }

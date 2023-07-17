@@ -28,26 +28,26 @@ namespace TeheManX4
         #endregion Properties
 
         #region Fields
-        public static byte[] pixels = new byte[0x58000];
-        public static byte[] tilebuffer = new byte[0x2000];
+        public static byte[] pixels = new byte[0x40000];
         public static int Id = 0;
         public static int BG = 0;
+        public static bool showCollision;
+        public static bool enemyExpand;
+        public static WriteableBitmap collisionBmp;
         public static bool zeroFlag = false;
         public static WriteableBitmap[] bmp = new WriteableBitmap[16];
         public static BitmapPalette[] palette = new BitmapPalette[0x80];
         public static ARC[] playerArcs = new ARC[3];
         #endregion Fields
 
-        #region Constructors
-        public Level()
-        {
-        }
-        #endregion Constructors
-
         #region Methods
         public static void LoadLevels(string path) //And Player Files
         {
             PSX.levels.Clear();
+            if (PSX.exe[PSX.CpuToOffset(0x80028db4)] == 0x80)
+                enemyExpand = true;
+            else
+                enemyExpand = false;
             for (int i = 0; i < 0xD; i++)
             {
                 //1ST HALF
@@ -243,6 +243,22 @@ namespace TeheManX4
             foreach (var l in PSX.levels)
                 l.ExtractLevelData();
         }
+        public static void LoadCollisionTiles()
+        {
+            // Get the assembly containing the embedded resource
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+
+            // Get the stream of the embedded resource
+            Stream resourceStream = assembly.GetManifestResourceStream("TeheManX4.Resources.MMX4B_Testtiles.bmp");
+
+            //Get Data For Collision Textures
+            BitmapImage bmpImage = new BitmapImage();
+            bmpImage.BeginInit();
+            bmpImage.StreamSource = resourceStream;
+            bmpImage.EndInit();
+            collisionBmp = new WriteableBitmap(bmpImage);
+
+        }
         public static unsafe void Draw16xTile(int id, int x, int y, int stride, IntPtr dest)
         {
             id &= 0x3FFF;
@@ -268,14 +284,21 @@ namespace TeheManX4
             int cordY = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 20) & 0xF;
             int page = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 24) & 0x7;
             int clut = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 8) & 0x3F;
+            int collisionType = BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) & 0x3F;
 
             IntPtr bmpBackBuffer = bmp[page + 8].BackBuffer;
             int bmpStride = bmp[page].BackBufferStride;
+
+            if (showCollision)
+                bmpBackBuffer = collisionBmp.BackBuffer;
 
             for (int row = 0; row < 16; row++)
             {
                 int destIndex = (x * 3) + (y + row) * stride;
                 int sourceIndex = (cordX * 8) + ((cordY * 16 + row) * bmpStride);
+
+                if(showCollision)
+                    sourceIndex = ((collisionType & 0xF) * 8) + (((collisionType >> 4) * 16 + row) * bmpStride);
 
                 for (int col = 0; col < 16; col++)
                 {
@@ -286,9 +309,18 @@ namespace TeheManX4
                     else
                         pixel >>= 4;
 
-                    buffer[destIndex++] = palette[clut + 64].Colors[pixel].R;
-                    buffer[destIndex++] = palette[clut + 64].Colors[pixel].G;
-                    buffer[destIndex++] = palette[clut + 64].Colors[pixel].B;
+                    if (showCollision)
+                    {
+                        buffer[destIndex++] = collisionBmp.Palette.Colors[pixel].R;
+                        buffer[destIndex++] = collisionBmp.Palette.Colors[pixel].G;
+                        buffer[destIndex++] = collisionBmp.Palette.Colors[pixel].B;
+                    }
+                    else
+                    {
+                        buffer[destIndex++] = palette[clut + 64].Colors[pixel].R;
+                        buffer[destIndex++] = palette[clut + 64].Colors[pixel].G;
+                        buffer[destIndex++] = palette[clut + 64].Colors[pixel].B;
+                    }
                 }
             }
         }
@@ -340,18 +372,31 @@ namespace TeheManX4
             //Get Enemy Data
             if (i < 26)
             {
-                uint p = BitConverter.ToUInt32(PSX.exe, Const.EnemyDataPointersOffset + i * 4);
+                uint p = BitConverter.ToUInt32(PSX.exe, Const.StartEnemyDataPointersOffset + i * 4);
                 if (p != 0)
-                    this.LoadEnemyData(PSX.CpuToOffset(p));
-                p = BitConverter.ToUInt32(PSX.exe, Const.StartEnemyDataPointersOffset + i * 4);
-                if (p != 0)
-                    this.LoadEnemyData(PSX.CpuToOffset(p),true);
+                    this.LoadEnemyData(PSX.CpuToOffset(p), true);
+
+                if (enemyExpand)
+                    this.LoadEnemyData();
+                else
+                {
+                    p = BitConverter.ToUInt32(PSX.exe, Const.EnemyDataPointersOffset + i * 4);
+                    if (p != 0)
+                        this.LoadEnemyData(PSX.CpuToOffset(p));
+                }
             }
         }
         private void ApplyLevelsToARC()
         {
             this.arc.SaveEntry(0, this.screenData);
             this.arc.SaveEntry(1, this.tileInfo);
+
+            if (enemyExpand)
+            {
+                byte[] data = CreateEnemyData(this.enemies);
+                Array.Resize(ref data,0x800);
+                this.arc.SaveEntry(0x14, data);
+            }
         }
         public void LoadTextures(bool onlyObj = false)
         {
@@ -373,7 +418,7 @@ namespace TeheManX4
                     int addrW = 0;
                     int count = 0x5800;
                     byte[] data = this.arc.LoadEntry(0x10102);
-
+                    int max = pixels.Length;
                     for (int i = 0; i < data.Length; i++)
                     {
                         if (count == 0) //GOTO Y:0
@@ -381,6 +426,7 @@ namespace TeheManX4
                             addrW = i / 0x5800 * 0x8000;
                             count = 0x5800;
                         }
+                        if (addrW >= max) break;
                         pixels[addrW] = data[i];
                         addrW++;
                         count--;
@@ -420,8 +466,10 @@ namespace TeheManX4
         {
             int count = 80 * 128;
             int addrW = 176 * 128;
+            int max = pixels.Length;
             for (int i = 0x2800; i < texData.Length; i++)
             {
+                if (addrW >= max) break;
                 pixels[addrW] = texData[i];
                 addrW++;
                 count--;
@@ -478,6 +526,34 @@ namespace TeheManX4
                 }
             }
             return ms.ToArray();
+        }
+        private void LoadEnemyData()
+        {
+            try
+            {
+                byte[] data = this.arc.LoadEntry(0x14);
+                int p = 0;
+                while (true)
+                {
+                    if (data[p + 3] == 0xFF)
+                        return;
+                    //Add New Enemy
+                    var e = new Enemy();
+                    e.range = (byte)((data[p] >> 4) & 0xF);
+                    e.id = data[p + 1];
+                    e.var = data[p + 2];
+                    e.type = data[p + 3];
+                    e.x = BitConverter.ToInt16(data, p + 4);
+                    e.y = BitConverter.ToInt16(data, p + 6);
+                    this.enemies.Add(e);
+                    p += 8;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                Application.Current.Shutdown();
+            }
         }
         private void LoadEnemyData(int p ,bool startEnemies = false)
         {
@@ -536,12 +612,22 @@ namespace TeheManX4
             if (!PSX.levels[id].isMid() && index < 26)
             {
                 //Check if there is a valid number of enemies
-                int enemiesCount;
+                int enemiesCount = 0;
 
-                if (PSX.levels[id].GetId() != 9 && PSX.levels[id].GetId() != 0xA)
-                    enemiesCount = PSX.levels[id].enemies.Count + PSX.levels[id].startEnemies.Count + PSX.levels[id + 1].enemies.Count + PSX.levels[id + 1].startEnemies.Count;
+                if (enemyExpand)
+                {
+                    if (levelId != 9 && levelId != 0xA)
+                        enemiesCount = PSX.levels[id].startEnemies.Count + PSX.levels[id + 1].startEnemies.Count;
+                    else
+                        enemiesCount = PSX.levels[id].startEnemies.Count;
+                }
                 else
-                    enemiesCount = PSX.levels[id].enemies.Count;
+                {
+                    if (levelId != 9 && levelId != 0xA)
+                        enemiesCount = PSX.levels[id].enemies.Count + PSX.levels[id].startEnemies.Count + PSX.levels[id + 1].enemies.Count + PSX.levels[id + 1].startEnemies.Count;
+                    else
+                        enemiesCount = PSX.levels[id].enemies.Count + PSX.levels[id].startEnemies.Count;
+                }
                 if(enemiesCount > Const.MaxEnemies[levelId])
                 {
                     MessageBox.Show(PSX.levels[id].arc.filename + " has " + enemiesCount + " (including the mid stage) when the max is: " + Const.MaxEnemies[levelId] + ". The save/export was cancelled!");
@@ -584,7 +670,7 @@ namespace TeheManX4
 
             if (player == -1 && stageId != 0xE)
             {
-                MessageBox.Show("The Reload function needs the player file in order for the Reload function to work.");
+                MessageBox.Show("The Reload Feature needs the player file in order for the feature to work.");
                 return false;
             }
             Settings.playerFileSize = 0;
@@ -608,6 +694,8 @@ namespace TeheManX4
                     Settings.levelScreenAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
                 else if(entry.type == 1)
                     Settings.levelTileAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
+                else if(entry.type == 0x14)
+                    Settings.levelEnemyAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
                 Settings.levelSize += entry.data.Length;
             }
             return true;
@@ -618,17 +706,22 @@ namespace TeheManX4
             int levelId = PSX.levels[id].GetId();
             if(!PSX.levels[id].isMid() && index < 26) //Saving Enemy Data
             {
-                //Regular Enemies
                 int freeOffset = PSX.CpuToOffset(BitConverter.ToUInt32(PSX.exe, Const.EnemyDataPointersOffset + index * 4));
-                byte[] data = CreateEnemyData(PSX.levels[id].enemies);
-                data.CopyTo(PSX.exe, freeOffset);
-                BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + index * 4);
-                freeOffset += data.Length;
+                byte[] data;
+                //Regular Enemies
+                if (!enemyExpand)
+                {
+                    data = CreateEnemyData(PSX.levels[id].enemies);
+                    data.CopyTo(PSX.exe, freeOffset);
+                    BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + index * 4);
+                    freeOffset += data.Length;
+                }
 
                 //Start Enemies
                 data = CreateEnemyData(PSX.levels[id].startEnemies);
                 data.CopyTo(PSX.exe, freeOffset);
                 BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.StartEnemyDataPointersOffset + index * 4);
+                freeOffset += data.Length;
 
                 //For Mid Stage
                 if (levelId != 0x9 && levelId != 0xA)
@@ -637,12 +730,15 @@ namespace TeheManX4
                     if (PSX.levels[id].arc.filename == "ST0B_0X.ARC")
                         offset = 2;
 
-                    //Regular Enemies
-                    freeOffset += data.Length;
-                    data = CreateEnemyData(PSX.levels[id + offset].enemies);
-                    data.CopyTo(PSX.exe, freeOffset);
-                    BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + (index + offset) * 4);
-                    freeOffset += data.Length;
+                    if (!enemyExpand)
+                    {
+                        //Regular Enemies
+                        freeOffset += data.Length;
+                        data = CreateEnemyData(PSX.levels[id + offset].enemies);
+                        data.CopyTo(PSX.exe, freeOffset);
+                        BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + (index + offset) * 4);
+                        freeOffset += data.Length;
+                    }
                     //Start Enemies
                     data = CreateEnemyData(PSX.levels[id + offset].startEnemies);
                     data.CopyTo(PSX.exe, freeOffset);

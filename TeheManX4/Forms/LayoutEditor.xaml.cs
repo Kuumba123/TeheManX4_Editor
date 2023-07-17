@@ -24,6 +24,7 @@ namespace TeheManX4.Forms
         #endregion Properties
 
         #region Fields
+        internal static List<List<Undo>> undos = new List<List<Undo>>();
         private static bool addedLabels = false;
         #endregion Fields
 
@@ -56,7 +57,7 @@ namespace TeheManX4.Forms
         #endregion Constructors
 
         #region Methods
-        public void DrawLayout()
+        public void DrawLayout(bool updateLbl = false)
         {
             int total = PSX.levels[Level.Id].screenData.Length / 0x200;
             IntPtr ptr = layoutBMP.BackBuffer;
@@ -73,26 +74,30 @@ namespace TeheManX4.Forms
                     {
                         byte screen = PSX.levels[Level.Id].layout[offsetX + offsetY * PSX.levels[Level.Id].width + PSX.levels[Level.Id].size * Level.BG];
                         Level.DrawScreen(screen, x * 256, y * 256, 2304, ptr);
-                        if(screen > total - 1)
+
+                        if (updateLbl)
                         {
-                            foreach (var l in screenLabels)
+                            if (screen > total - 1)
                             {
-                                if (Grid.GetColumn(l) == x && Grid.GetRow(l) == y)
+                                foreach (var l in screenLabels)
                                 {
-                                    if (l.Visibility != Visibility.Visible)
-                                        l.Visibility = Visibility.Visible;
-                                    l.Content = Convert.ToString(screen, 16).ToUpper();
+                                    if (Grid.GetColumn(l) == x && Grid.GetRow(l) == y)
+                                    {
+                                        if (l.Visibility != Visibility.Visible)
+                                            l.Visibility = Visibility.Visible;
+                                        l.Content = Convert.ToString(screen, 16).ToUpper();
+                                    }
                                 }
                             }
-                        }
-                        else
-                        {
-                            foreach (var l in screenLabels)
+                            else
                             {
-                                if (Grid.GetColumn(l) == x && Grid.GetRow(l) == y)
+                                foreach (var l in screenLabels)
                                 {
-                                    if(l.Visibility != Visibility.Hidden)
-                                        l.Visibility = Visibility.Hidden;
+                                    if (Grid.GetColumn(l) == x && Grid.GetRow(l) == y)
+                                    {
+                                        if (l.Visibility != Visibility.Hidden)
+                                            l.Visibility = Visibility.Hidden;
+                                    }
                                 }
                             }
                         }
@@ -152,7 +157,7 @@ namespace TeheManX4.Forms
                 MainWindow.window.layoutE.screenInt.Value = screenAmount;
 
 
-            DrawLayout();
+            DrawLayout(true);
             DrawScreen();
         }
         #endregion Methods
@@ -187,7 +192,7 @@ namespace TeheManX4.Forms
             }
             else
             {
-                if (Keyboard.IsKeyDown(Key.LeftShift))
+                if (Keyboard.IsKeyDown(Key.LeftShift)) //For Modifying the Clicked Screen
                 {
                     ListWindow.layoutOffset = i;
                     ListWindow l = new ListWindow(1);
@@ -196,9 +201,16 @@ namespace TeheManX4.Forms
                         MainWindow.layoutWindow.EditScreen(cX + (MainWindow.window.layoutE.viewerX >> 8), cY + (MainWindow.window.layoutE.viewerY >> 8));
                     return;
                 }
+
+                //Save Undo & Edit
+                if (undos[Level.Id].Count == Const.MaxUndo)
+                    undos[Level.Id].RemoveAt(0);
+                undos[Level.Id].Add(Undo.CreateLayoutUndo(i));
+
                 PSX.levels[Level.Id].layout[i] = (byte)selectedScreen;
                 PSX.edit = true;
-                DrawLayout();
+                DrawLayout(true);
+                MainWindow.window.enemyE.Draw();
                 if (ListWindow.screenViewOpen)
                     MainWindow.layoutWindow.EditScreen(cX + (MainWindow.window.layoutE.viewerX >> 8), cY + (MainWindow.window.layoutE.viewerY >> 8));
             }
@@ -296,7 +308,7 @@ namespace TeheManX4.Forms
             if (MainWindow.window.layoutE.viewerY != 0)
             {
                 MainWindow.window.layoutE.viewerY -= 0x100;
-                MainWindow.window.layoutE.DrawLayout();
+                MainWindow.window.layoutE.DrawLayout(true);
                 MainWindow.window.UpdateViewrCam();
             }
         }
@@ -305,7 +317,7 @@ namespace TeheManX4.Forms
             if ((MainWindow.window.layoutE.viewerY >> 8) < (PSX.levels[Level.Id].height - 3))
             {
                 MainWindow.window.layoutE.viewerY += 0x100;
-                MainWindow.window.layoutE.DrawLayout();
+                MainWindow.window.layoutE.DrawLayout(true);
                 MainWindow.window.UpdateViewrCam();
             }
         }
@@ -314,7 +326,7 @@ namespace TeheManX4.Forms
             if (MainWindow.window.layoutE.viewerX != 0)
             {
                 MainWindow.window.layoutE.viewerX -= 0x100;
-                MainWindow.window.layoutE.DrawLayout();
+                MainWindow.window.layoutE.DrawLayout(true);
                 MainWindow.window.UpdateViewrCam();
             }
         }
@@ -323,7 +335,7 @@ namespace TeheManX4.Forms
             if ((MainWindow.window.layoutE.viewerX >> 8) < (PSX.levels[Level.Id].width - 3))
             {
                 MainWindow.window.layoutE.viewerX += 0x100;
-                MainWindow.window.layoutE.DrawLayout();
+                MainWindow.window.layoutE.DrawLayout(true);
                 MainWindow.window.Update();
             }
         }

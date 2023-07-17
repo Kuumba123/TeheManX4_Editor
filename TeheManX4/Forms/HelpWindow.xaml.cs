@@ -43,7 +43,18 @@ namespace TeheManX4.Forms
             "Its kinda hard to really explain how/what this tab is for unless you just watch the video but " +
             "in each level to save CPU RAM + Speed-Up loads the game ony keeps the required SPRT Frames (the info that tells the game how to peace the textures into something lookable) " +
             "and just keeps copying them across the all the other stages. This tool can extract and re-add in that SPRT data so that you don't get a glitchy " +
-            "mess when you change the enemies in a stage (just watch the video)"
+            "mess when you change the enemies in a stage (just watch the video)",
+            //5
+            "This is where you can edit the width and height of the level layout , if the width/height is less than  what it orignally was " +
+            $"the right and bottom of layout will be trimmed off. The max size of the layout data is {Const.MaxLayoutSize} " +
+            $"however that is for all the levels combined so if you need extra layout space just trim off some other level. " +
+            $"(Some of the sub-levels dont use there entire layout so it would be a good choice to trim those) " +
+            $"The total size label tells you the amount of space the level uses (in CPU's RAM). " +
+            $"It does not include the CLUT but it does include the backup screen data. " +
+            $"The total enemies count does not include the start enemies and " +
+            $"lastly you can also edit the amount of 16x16 tiles and the amount of screens per level. " +
+            $"there is no real limet you have to worry about while editing these to parameters , just make sure " +
+            $"you rebuild the disc before messing with the real-time level editing (Reload button)"
         };
         public HelpWindow(int msgId)
         {

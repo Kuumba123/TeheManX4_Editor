@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TeheManX4.Forms"
         Background="Black"
         mc:Ignorable="d"
-        Title="TeheMan X4 Sprite Editor" Height="800" Width="1340" ResizeMode="CanMinimize" PreviewKeyDown="Window_PreviewKeyDown">
+        Title="TeheMan X4 Sprite Editor" Height="800" Width="1340" ResizeMode="CanMinimize">
     <Window.Resources>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="White"/>
@@ -61,7 +61,10 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Border  BorderBrush="White" BorderThickness="4">
-                <Image Width="512" Height="512"  Name="renderImg"></Image>
+                <Canvas x:Name="canvas" Width="512" Height="512">
+                    <Image Width="512" Height="512"  Name="renderImg"></Image>
+                    <Rectangle x:Name="outline" Width="32" Height="32" Visibility="Hidden" StrokeThickness="2.5" StrokeDashArray="2 2"  Stroke="#AFFF0000"></Rectangle>
+                </Canvas>
             </Border>
             
             
@@ -75,7 +78,7 @@
                 <local:NumInt IsEnabled="False" Height="40" ValueChanged="clutInt_ValueChanged" Width="50" Minimum="0" x:Name="clutInt" Maximum="3"></local:NumInt>
                 <Label Height="40">Cord:</Label>
                 <local:NumInt IsEnabled="False" Width="70" Height="40" Minimum="0" Maximum="#3FF" x:Name="quadCordInt" ValueChanged="quadCordInt_ValueChanged"></local:NumInt>
-                <Button IsEnabled="False" Margin="15,0" Width="30" Height="30" x:Name="toolsBtn" Click="toolsBtn_Click">⚙️</Button>
+                <Button Margin="15,0" Width="30" Height="30" x:Name="toolsBtn" Click="toolsBtn_Click">⚙️</Button>
             </StackPanel>
             
             <!--Other-->

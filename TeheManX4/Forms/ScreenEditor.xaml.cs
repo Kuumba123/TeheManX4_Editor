@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,6 +13,10 @@ namespace TeheManX4.Forms
     /// </summary>
     public partial class ScreenEditor : UserControl
     {
+        #region Fields
+        internal static List<List<Undo>> undos = new List<List<Undo>>();
+        #endregion Fields
+
         #region Properties
         WriteableBitmap screenBMP = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Rgb24, null);
         WriteableBitmap tileBMP = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Rgb24, null);
@@ -196,7 +201,9 @@ namespace TeheManX4.Forms
                 {
                     if (Grid.GetColumnSpan(screenCursor) != 1 || Grid.GetRowSpan(screenCursor) != 1) //Paste From other Screen
                     {
-
+                        if (undos[Level.Id].Count == Const.MaxUndo)
+                            undos[Level.Id].RemoveAt(0);
+                        undos[Level.Id].Add(Undo.CreateGroupScreenEditUndo((byte)screenId, (byte)cX, (byte)cY, (byte)Grid.GetColumnSpan(screenCursor), (byte)Grid.GetRowSpan(screenCursor)));
                         for (int r = 0; r < Grid.GetRowSpan(screenCursor); r++)
                         {
                             for (int c = 0; c < Grid.GetColumnSpan(screenCursor); c++)
@@ -225,7 +232,7 @@ namespace TeheManX4.Forms
                     return;
                 }
 
-                //Normal Paste
+                //Tile Paste
                 screenDown = true;
                 if (Grid.GetColumnSpan(cursor) > 1 || Grid.GetRowSpan(cursor) > 1) //Multi-Select
                 {
@@ -233,6 +240,11 @@ namespace TeheManX4.Forms
                     tileAmount--;
                     int rowSrc = Grid.GetRow(cursor);
                     int colSrc = Grid.GetColumn(cursor);
+
+                    if (undos[Level.Id].Count == Const.MaxUndo)
+                        undos[Level.Id].RemoveAt(0);
+                    undos[Level.Id].Add(Undo.CreateGroupScreenEditUndo((byte)screenId, (byte)cX, (byte)cY,(byte)Grid.GetColumnSpan(cursor), (byte)Grid.GetRowSpan(cursor)));
+
                     for (int r = 0; r < Grid.GetRowSpan(cursor); r++)
                     {
                         for (int c = 0; c < Grid.GetColumnSpan(cursor); c++)
@@ -264,6 +276,11 @@ namespace TeheManX4.Forms
                 ushort t = BitConverter.ToUInt16(PSX.levels[Level.Id].screenData, cord + (screenId * 0x200));
                 if ((t & 0x3FFF) == selectedTile)
                     return;
+
+                if (undos[Level.Id].Count == Const.MaxUndo)
+                    undos[Level.Id].RemoveAt(0);
+                undos[Level.Id].Add(Undo.CreateScreenEditUndo((byte)screenId,(byte)cX,(byte)cY));
+
                 PSX.levels[Level.Id].screenData[cord + (screenId * 0x200)] = (byte)(selectedTile & 0xFF);
                 PSX.levels[Level.Id].screenData[cord + 1 + (screenId * 0x200)] = (byte)((selectedTile >> 8) + ((t & 0xC000) >> 8));
                 PSX.levels[Level.Id].edit = true;
@@ -357,6 +374,11 @@ namespace TeheManX4.Forms
                     ushort t = BitConverter.ToUInt16(PSX.levels[Level.Id].screenData, cord + (screenId * 0x200));
                     if ((t & 0x3FFF) == selectedTile)
                         return;
+
+                    if (undos[Level.Id].Count == Const.MaxUndo)
+                        undos[Level.Id].RemoveAt(0);
+                    undos[Level.Id].Add(Undo.CreateScreenEditUndo((byte)screenId, (byte)cX, (byte)cY));
+
                     //New Tile
                     PSX.levels[Level.Id].screenData[cord + (screenId * 0x200)] = (byte)(selectedTile & 0xFF);
                     PSX.levels[Level.Id].screenData[cord + 1 + (screenId * 0x200)] = (byte)((selectedTile >> 8) + ((t & 0xC000) >> 8));
@@ -493,6 +515,11 @@ namespace TeheManX4.Forms
 
                 int colLocation = Grid.GetColumn(cursor);
                 int rowLocation = Grid.GetRow(cursor);
+
+                if (undos[Level.Id].Count == Const.MaxUndo)
+                    undos[Level.Id].RemoveAt(0);
+                undos[Level.Id].Add(Undo.CreateScreenTileGroupEditUndo((byte)tileCol, 2,(byte)colLocation, (byte)rowLocation, (byte)Grid.GetColumnSpan(cursor), (byte)Grid.GetRowSpan(cursor)));
+
                 for (int r = 0; r < Grid.GetRowSpan(cursor); r++)
                 {
                     for (int c = 0; c < Grid.GetColumnSpan(cursor); c++)
@@ -520,6 +547,11 @@ namespace TeheManX4.Forms
 
             if (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2] == val)
                 return;
+
+            if (undos[Level.Id].Count == Const.MaxUndo)
+                undos[Level.Id].RemoveAt(0);
+            undos[Level.Id].Add(Undo.CreateScreenTileEditUndo((ushort)selectedTile, 2, PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2]));
+
             PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2] = val;
             PSX.levels[Level.Id].edit = true;
 
@@ -551,6 +583,11 @@ namespace TeheManX4.Forms
 
                 int colLocation = Grid.GetColumn(cursor);
                 int rowLocation = Grid.GetRow(cursor);
+
+                if (undos[Level.Id].Count == Const.MaxUndo)
+                    undos[Level.Id].RemoveAt(0);
+                undos[Level.Id].Add(Undo.CreateScreenTileGroupEditUndo((byte)tileCol, 3, (byte)colLocation, (byte)rowLocation, (byte)Grid.GetColumnSpan(cursor), (byte)Grid.GetRowSpan(cursor)));
+
                 for (int r = 0; r < Grid.GetRowSpan(cursor); r++)
                 {
                     for (int c = 0; c < Grid.GetColumnSpan(cursor); c++)
@@ -577,6 +614,11 @@ namespace TeheManX4.Forms
 
             if (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3] == val)
                 return;
+
+            if (undos[Level.Id].Count == Const.MaxUndo)
+                undos[Level.Id].RemoveAt(0);
+            undos[Level.Id].Add(Undo.CreateScreenTileEditUndo((ushort)selectedTile, 3, PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3]));
+
             PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3] = val;
             PSX.levels[Level.Id].edit = true;
 
@@ -608,6 +650,11 @@ namespace TeheManX4.Forms
 
                 int colLocation = Grid.GetColumn(cursor);
                 int rowLocation = Grid.GetRow(cursor);
+
+                if (undos[Level.Id].Count == Const.MaxUndo)
+                    undos[Level.Id].RemoveAt(0);
+                undos[Level.Id].Add(Undo.CreateScreenTileGroupEditUndo((byte)tileCol, 1, (byte)colLocation, (byte)rowLocation, (byte)Grid.GetColumnSpan(cursor), (byte)Grid.GetRowSpan(cursor)));
+
                 for (int r = 0; r < Grid.GetRowSpan(cursor); r++)
                 {
                     for (int c = 0; c < Grid.GetColumnSpan(cursor); c++)
@@ -633,6 +680,10 @@ namespace TeheManX4.Forms
             }
             if (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 1] == val)
                 return;
+
+            if (undos[Level.Id].Count == Const.MaxUndo)
+                undos[Level.Id].RemoveAt(0);
+            undos[Level.Id].Add(Undo.CreateScreenTileEditUndo((ushort)selectedTile, 1, PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 1]));
 
             PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 1] = val;
             PSX.levels[Level.Id].edit = true;
@@ -664,6 +715,11 @@ namespace TeheManX4.Forms
 
                 int colLocation = Grid.GetColumn(cursor);
                 int rowLocation = Grid.GetRow(cursor);
+
+                if (undos[Level.Id].Count == Const.MaxUndo)
+                    undos[Level.Id].RemoveAt(0);
+                undos[Level.Id].Add(Undo.CreateScreenTileGroupEditUndo((byte)tileCol, 0, (byte)colLocation, (byte)rowLocation, (byte)Grid.GetColumnSpan(cursor), (byte)Grid.GetRowSpan(cursor)));
+
                 for (int r = 0; r < Grid.GetRowSpan(cursor); r++)
                 {
                     for (int c = 0; c < Grid.GetColumnSpan(cursor); c++)
@@ -676,13 +732,47 @@ namespace TeheManX4.Forms
                     }
                 }
                 PSX.levels[Level.Id].edit = true;
+                if (Level.showCollision)
+                {
+                    MainWindow.window.layoutE.DrawLayout();
+                    MainWindow.window.layoutE.DrawScreen();
+
+                    MainWindow.window.screenE.DrawScreen();
+                    MainWindow.window.screenE.DrawTiles();
+                    MainWindow.window.screenE.DrawTile();
+
+                    MainWindow.window.x16E.DrawTiles();
+                    MainWindow.window.x16E.DrawTile();
+
+                    MainWindow.window.enemyE.Draw();
+                }
                 return;
             }
 
             if (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 0] == (byte)(int)e.NewValue)
                 return;
+
+            if (undos[Level.Id].Count == Const.MaxUndo)
+                undos[Level.Id].RemoveAt(0);
+            undos[Level.Id].Add(Undo.CreateScreenTileEditUndo((ushort)selectedTile, 0, PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 0]));
+
             PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 0] = (byte)(int)e.NewValue;
             PSX.levels[Level.Id].edit = true;
+
+            if (Level.showCollision)
+            {
+                MainWindow.window.layoutE.DrawLayout();
+                MainWindow.window.layoutE.DrawScreen();
+
+                MainWindow.window.screenE.DrawScreen();
+                MainWindow.window.screenE.DrawTiles();
+                MainWindow.window.screenE.DrawTile();
+
+                MainWindow.window.x16E.DrawTiles();
+                MainWindow.window.x16E.DrawTile();
+
+                MainWindow.window.enemyE.Draw();
+            }
         }
         private void Help_Click(object sender, RoutedEventArgs e)
         {

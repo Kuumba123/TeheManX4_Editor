@@ -16,17 +16,15 @@ namespace TeheManX4.Forms
     /// </summary>
     public partial class SpriteEditor : Window
     {
-        #region Fields
-        bool enable = false;
-        byte[] buffer = new byte[1760 * 256 / 2];
-        bool added = false;
+        #region Properties
+        bool optionsOpened;
+        bool enable;
+        bool added;
         int mode = -1;
-        int entrySize = 0;
         List<Sprite> spriteSlots = new List<Sprite>();
-        List<WriteableBitmap> textures = new List<WriteableBitmap>();
+        WriteableBitmap textureBmp = new WriteableBitmap(256, Const.MaxHeight, 96, 96, PixelFormats.Indexed4, Const.GreyScalePallete);
+        WriteableBitmap outputBmp = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Bgra32, null);
         BitmapPalette[] palette = new BitmapPalette[0x80];
-        RenderTargetBitmap target = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Default);
-        DrawingVisual drawingVisual = new DrawingVisual();
         ARC arc;
         ARC clutArc;
         int slotId = 0;
@@ -34,7 +32,7 @@ namespace TeheManX4.Forms
         int frameId = 0;
         byte[] sprtData;
         byte[] texCordData;
-        #endregion Fields
+        #endregion Properties
 
         #region Constructors
         public SpriteEditor()
@@ -44,71 +42,183 @@ namespace TeheManX4.Forms
         #endregion Constructors
 
         #region Methods
-        private void DrawSprite()
+        private unsafe void DrawSprite(bool clear = false)
         {
-            if (spriteSlots[slotId].frames.Count == 0)
+            if (!clear)
+                ClearCanvas(Colors.Gray);
+            else
+                ClearCanvas(Colors.Transparent);
+
+            if (spriteSlots[slotId].frames.Count == 0) goto End;
+
+            outputBmp.Lock();
+
+            byte* ptr = (byte*)outputBmp.BackBuffer;
+            int stride = outputBmp.BackBufferStride;
+            IntPtr bmpBackBuffer = textureBmp.BackBuffer;
+
+            foreach (var q in spriteSlots[slotId].frames[frameId].quads)
             {
-                ClearCanvas();
-                return;
+                int srcY = spriteSlots[slotId].cord + (q.tex & 0xF0) + q.tpage * 256;
+                int srcX = (q.tex & 0xF) * 8;
+                int destX = q.x + 128;
+                int destY = q.y + 128;
+
+
+                for (int row = 0; row < 16; row++)
+                {
+                    int sourceIndex = srcX + ((srcY + row) * 128);
+
+                    for (int col = 0; col < 16; col++)
+                    {
+                        int locX;
+                        int locY;
+
+                        if (q.flipH)
+                            locX = col ^ 0xF;
+                        else
+                            locX = col;
+
+                        if (q.flipV)
+                            locY = row ^ 0xF;
+                        else
+                            locY = row;
+                        if (destX + locX < 0) continue;
+
+                        int destIndex = ((destX + locX) * 4) + (destY + locY) * stride;
+
+                        byte pixel = *(byte*)(bmpBackBuffer + sourceIndex + (col / 2));
+
+                        if ((col & 1) == 1)
+                            pixel &= 0xF;
+                        else
+                            pixel >>= 4;
+
+                        if(destIndex < outputBmp.BackBufferStride * outputBmp.PixelHeight)
+                        {
+                            if (spriteSlots[slotId].colors.Count != 0)
+                            {
+                                if (spriteSlots[slotId].colors[q.clut * 16 + pixel].A != 0)
+                                {
+                                    ptr[destIndex] = spriteSlots[slotId].colors[q.clut * 16 + pixel].B;
+                                    ptr[destIndex + 1] = spriteSlots[slotId].colors[q.clut * 16 + pixel].G;
+                                    ptr[destIndex + 2] = spriteSlots[slotId].colors[q.clut * 16 + pixel].R;
+                                    ptr[destIndex + 3] = 0xFF;
+                                }
+                            }
+                            else
+                            {
+                                if (Const.GreyScalePallete.Colors[pixel].R != 0)
+                                {
+                                    ptr[destIndex] = Const.GreyScalePallete.Colors[pixel].B;
+                                    ptr[destIndex + 1] = Const.GreyScalePallete.Colors[pixel].G;
+                                    ptr[destIndex + 2] = Const.GreyScalePallete.Colors[pixel].R;
+                                    ptr[destIndex + 3] = 0xFF;
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            ImageBrush brush;
-            using (var dc = drawingVisual.RenderOpen())
+            if ((bool)outCheck.IsChecked)
             {
-                dc.DrawRectangle(Brushes.Gray, null, new Rect(0, 0, 256, 256));
-                foreach (var q in spriteSlots[slotId].frames[frameId].quads)
-                {
-                    int srcY = spriteSlots[slotId].cord + (q.tex & 0xF0) + q.tpage * 256;
-                    int srcX = (q.tex & 0xF) * 16;
-                    int destX = q.x + 128;
-                    int destY = q.y + 128;
-
-                    int scalX;
-                    int scalY;
-                    if (q.flipH)
-                    {
-                        scalX = -1;
-                    }
-                    else
-                    {
-                        scalX = 1;
-                    }
-                    if (q.flipV)
-                    {
-                        scalY = -1;
-                    }
-                    else
-                    {
-                        scalY = 1;
-                    }
-                    brush = new ImageBrush(textures[q.clut]);
-                    brush.RelativeTransform = new ScaleTransform(scalX, scalY, 0.5, 0.5);
-                    brush.Viewbox = new Rect(srcX, srcY, 16, 16);
-                    brush.ViewboxUnits = BrushMappingMode.Absolute;
-                    brush.Viewport = new Rect(0, 0, 1, 1);
-                    brush.ViewportUnits = BrushMappingMode.RelativeToBoundingBox;
-                    dc.DrawRectangle(brush, null, new Rect(destX, destY, 16, 16));
-                }
-
-                if (spriteSlots[slotId].frames[frameId].quads.Count == 0)
-                    goto Done;
-
-                if ((bool)outCheck.IsChecked)
-                {
-                    sbyte x = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].x;
-                    sbyte y = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].y;
-                    // Create a red pen for the outline
-                    Pen pen = new Pen(Brushes.Red, 1);
-                    dc.DrawRectangle(null, pen, new Rect(128 + x, 128 + y, 16, 16));
-                }
-            Done:;
+                int x = (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].x + 128) * 2;
+                int y = (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].y + 128) * 2;
+                outline.Visibility = Visibility.Visible;
+                Canvas.SetLeft(outline, x);
+                Canvas.SetTop(outline, y);
             }
-            target.Render(drawingVisual);
-            renderImg.Source = target;
+            else
+                outline.Visibility = Visibility.Hidden;
+
+            //End
+            outputBmp.AddDirtyRect(new Int32Rect(0, 0, outputBmp.PixelWidth, outputBmp.PixelHeight));
+            outputBmp.Unlock();
+        End:
+            renderImg.Source = outputBmp;
+        }
+        private unsafe void DrawSpriteFromArc()
+        {
+            ClearCanvas(Colors.Gray);
+
+            if (outline.Visibility != Visibility.Hidden)
+                outline.Visibility = Visibility.Hidden;
+
+            Frame frame = Sprite.GetFrame(sprtData, BitConverter.ToInt32(sprtData, slotId * 4), frameId);
+            int texCord;
+            if (slotId * 4 < texCordData.Length)
+                texCord = BitConverter.ToInt32(texCordData, slotId * 4);
+            else
+                texCord = BitConverter.ToInt32(texCordData, texCordData.Length - 4);
+
+
+            outputBmp.Lock();
+
+            byte* ptr = (byte*)outputBmp.BackBuffer;
+            int stride = outputBmp.BackBufferStride;
+            IntPtr bmpBackBuffer = textureBmp.BackBuffer;
+
+            foreach (var q in frame.quads)
+            {
+                int srcY = (texCord >> 7) + (q.tex & 0xF0) + q.tpage * 256;
+                int srcX = (q.tex & 0xF) * 8;
+                int destX = q.x + 128;
+                int destY = q.y + 128;
+
+
+                for (int row = 0; row < 16; row++)
+                {
+                    int sourceIndex = srcX + ((srcY + row) * 128);
+
+                    for (int col = 0; col < 16; col++)
+                    {
+                        int locX;
+                        int locY;
+
+                        if (q.flipH)
+                            locX = col ^ 0xF;
+                        else
+                            locX = col;
+
+                        if (q.flipV)
+                            locY = row ^ 0xF;
+                        else
+                            locY = row;
+                        if (destX + locX < 0) continue;
+
+                        int destIndex = ((destX + locX) * 4) + (destY + locY) * stride;
+
+                        byte pixel = *(byte*)(bmpBackBuffer + sourceIndex + (col / 2));
+
+                        if ((col & 1) == 1)
+                            pixel &= 0xF;
+                        else
+                            pixel >>= 4;
+
+                        if (destIndex < outputBmp.BackBufferStride * outputBmp.PixelHeight)
+                        {
+                            if (palette[clutId + q.clut].Colors[pixel].A != 0)
+                            {
+                                ptr[destIndex] = palette[clutId + q.clut].Colors[pixel].B;
+                                ptr[destIndex + 1] = palette[clutId + q.clut].Colors[pixel].G;
+                                ptr[destIndex + 2] = palette[clutId + q.clut].Colors[pixel].R;
+                                ptr[destIndex + 3] = 0xFF;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //End
+            outputBmp.AddDirtyRect(new Int32Rect(0, 0, outputBmp.PixelWidth, outputBmp.PixelHeight));
+            outputBmp.Unlock();
+            renderImg.Source = outputBmp;
         }
         private void UpdateSpriteInfo()
         {
             if(mode == 2)
             {
+                enable = false;
                 if (!quadInt.IsEnabled)
                     quadInt.IsEnabled = true;
                 sbyte x = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].x;
@@ -122,79 +232,53 @@ namespace TeheManX4.Forms
                 horCheck.IsChecked = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].flipH;
                 verCheck.IsChecked = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].flipV;
                 quadCordInt.Value = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].tex + (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].tpage << 8);
-
+                enable = true;
             }
         }
         private void UpdateTexCursor()
         {
             int tex = spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].tex;
 
-            int y = (tex & 0xF0) << 1;
+            int y = ((tex & 0xF0) + spriteSlots[slotId].cord) << 1;
             y += spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].tpage * 256 * 2;
             int x = (tex & 0xF) << 5;
 
             Canvas.SetLeft(tileCursor, x);
             Canvas.SetTop(tileCursor, y);
         }
-        private void DrawSpriteFromArc()
+        private unsafe void ClearTexture()
         {
-            //ViewBox == Tex location
-            Frame frame = Sprite.GetFrame(sprtData, BitConverter.ToInt32(sprtData, slotId * 4), frameId);
-            int texCord;
-            if (slotId * 4 < texCordData.Length)
-                texCord = BitConverter.ToInt32(texCordData, slotId * 4);
-            else
-                texCord = BitConverter.ToInt32(texCordData, texCordData.Length - 4);
+            textureBmp.Lock();
+            byte* buffer = (byte*)textureBmp.BackBuffer;
+            for (int i = 0; i < textureBmp.PixelHeight * 128; i++)
+                buffer[i] = 0;
 
-            ImageBrush brush;
-            using (var dc = drawingVisual.RenderOpen())
+            textureBmp.AddDirtyRect(new Int32Rect(0, 0, 256, textureBmp.PixelHeight));
+            textureBmp.Unlock();
+        }
+        private unsafe void ClearCanvas(Color cls, bool update = false)
+        {
+            outputBmp.Lock();
+            byte* buffer = (byte*)outputBmp.BackBuffer;
+            int stride = outputBmp.BackBufferStride;
+
+            for (int y = 0; y < outputBmp.PixelHeight; y++)
             {
-                dc.DrawRectangle(Brushes.Gray, null, new Rect(0, 0, 256, 256));
-                foreach (var q in frame.quads)
+                for (int x = 0; x < outputBmp.PixelWidth; x++)
                 {
-                    int srcY = (texCord >> 7) + (q.tex & 0xF0) + q.tpage * 256;
-                    int srcX = (q.tex & 0xF) * 16;
-                    int destX = q.x + 128;
-                    int destY = q.y + 128;
+                    int destIndex = x * 4 + y * stride;
 
-                    int scalX;
-                    int scalY;
-                    if (q.flipH)
-                    {
-                        scalX = -1;
-                    }
-                    else
-                    {
-                        scalX = 1;
-                    }
-                    if (q.flipV)
-                    {
-                        scalY = -1;
-                    }
-                    else
-                    {
-                        scalY = 1;
-                    }
-                    brush = new ImageBrush(textures[q.clut]);
-                    brush.RelativeTransform = new ScaleTransform(scalX, scalY,0.5,0.5);
-                    brush.Viewbox = new Rect(srcX, srcY, 16, 16);
-                    brush.ViewboxUnits = BrushMappingMode.Absolute;
-                    brush.Viewport = new Rect(0, 0, 1, 1);
-                    brush.ViewportUnits = BrushMappingMode.RelativeToBoundingBox;
-                    dc.DrawRectangle(brush, null, new Rect(destX, destY, 16, 16));
+                    buffer[destIndex++] = cls.B;
+                    buffer[destIndex++] = cls.G;
+                    buffer[destIndex++] = cls.R;
+                    buffer[destIndex++] = cls.A;
                 }
             }
-            target.Render(drawingVisual);
-            renderImg.Source = target;
-        }
-        private void ClearCanvas()
-        {
-            using(var dc = drawingVisual.RenderOpen())
-            {
-                dc.DrawRectangle(Brushes.Gray, null, new Rect(0, 0, 256, 256));
-            }
-            target.Render(drawingVisual);
-            renderImg.Source = target;
+            outputBmp.AddDirtyRect(new Int32Rect(0, 0, outputBmp.PixelWidth, outputBmp.PixelHeight));
+            outputBmp.Unlock();
+
+            if (update)
+                renderImg.Source = outputBmp;
         }
         public void UpdateClutTxt() //also update Cursor
         {
@@ -205,7 +289,8 @@ namespace TeheManX4.Forms
         private void AddClut()
         {
             added = true;
-            for (int y = 0; y < 0x40; y++)
+            cursor.Visibility = Visibility.Visible;
+            for (int y = 0; y < 0x80; y++)
             {
                 for (int x = 0; x < 16; x++)
                 {
@@ -223,6 +308,20 @@ namespace TeheManX4.Forms
                     Grid.SetColumn(r, x);
                     Panel.SetZIndex(r, 0);
                     clutGrid.Children.Add(r);
+                }
+            }
+        }
+        private void ClearClut()
+        {
+            cursor.Visibility = Visibility.Hidden;
+            if (added)
+            {
+                foreach (var child in clutGrid.Children)
+                {
+                    if (child.GetType() != typeof(Rectangle)) return;
+
+                    Rectangle rect = child as Rectangle;
+                    rect.Fill = Brushes.Black;
                 }
             }
         }
@@ -255,7 +354,6 @@ namespace TeheManX4.Forms
             verCheck.Visibility = Visibility.Visible;
             allCheck.Visibility = Visibility.Visible;
             outCheck.Visibility = Visibility.Visible;
-            toolsBtn.IsEnabled = true;
             tileCursor.Visibility = Visibility.Visible;
         }
         private void DisableQuadControls()
@@ -271,7 +369,6 @@ namespace TeheManX4.Forms
             verCheck.Visibility = Visibility.Hidden;
             allCheck.Visibility = Visibility.Hidden;
             outCheck.Visibility = Visibility.Hidden;
-            toolsBtn.IsEnabled = false;
             tileCursor.Visibility = Visibility.Hidden;
         }
         private void EnableSlotButtons()
@@ -305,29 +402,26 @@ namespace TeheManX4.Forms
                 {
                     try
                     {
-                        ARC arcT = new ARC(File.ReadAllBytes(fd.FileName));
-                        if (!arcT.ContainsEntry(0xA) && !arcT.ContainsEntry(18))
+                        ARC tmpArc = new ARC(File.ReadAllBytes(fd.FileName));
+                        if (!tmpArc.ContainsEntry(0xA) && !tmpArc.ContainsEntry(18))
                         {
                             MessageBox.Show("Could not find any SPRT Quad Data in this file");
                             return;
                         }
-                        
 
-                        arcT.filename = fd.SafeFileName;
+                        tmpArc.filename = fd.SafeFileName;
                         byte[] data;
-                        if (arcT.ContainsEntry(0xA))    //Normal Objects
+                        if (tmpArc.ContainsEntry(0xA))    //Normal Objects
                         {
-                            data = arcT.LoadEntry(0x010102);
-                            entrySize = arcT.GetEntrySize(0x010102);
-                            sprtData = arcT.LoadEntry(0xA);
-                            texCordData = arcT.LoadEntry(12);
+                            data = tmpArc.LoadEntry(0x010102);
+                            sprtData = tmpArc.LoadEntry(0xA);
+                            texCordData = tmpArc.LoadEntry(12);
                         }
                         else //Title Objects
                         {
-                            data = arcT.LoadEntry(0x10002);
-                            entrySize = arcT.GetEntrySize(0x10002);
+                            data = tmpArc.LoadEntry(0x10002);
                             byte[] tmp = new byte[] { 4, 0, 0, 0 };
-                            sprtData = tmp.Concat(arcT.LoadEntry(18)).ToArray();
+                            sprtData = tmp.Concat(tmpArc.LoadEntry(18)).ToArray();
                             texCordData = new byte[4];
                         }
 
@@ -349,7 +443,7 @@ namespace TeheManX4.Forms
                         else
                             return;
 
-                        for (int b = 0; b < 0x40; b++)
+                        for (int b = 0; b < 0x80; b++)
                         {
                             List<Color> l = new List<Color>();
                             for (int i = 0; i < 16; i++)
@@ -366,14 +460,8 @@ namespace TeheManX4.Forms
                             }
                             palette[b] = new BitmapPalette(l);
                         }
-                        Array.Clear(buffer, 0, 1760 * 256 / 2);
-                        textures.Clear();
-                        for (int i = 0; i < 4; i++)
-                        {
-                            textures.Add(new WriteableBitmap(256, Const.MaxHeight, 96, 96, PixelFormats.Indexed4, palette[i + 0x18]));
-                            textures[i].WritePixels(new Int32Rect(0, 0, 256, data.Length / 128), data, 128, 0);
-                        }
-                        data.CopyTo(buffer, 0);
+                        ClearTexture();
+                        textureBmp.WritePixels(new Int32Rect(0, 0, 256, data.Length / 128), data, 128, 0);
 
                         mode = 1;
                         slotId = 0;
@@ -388,13 +476,13 @@ namespace TeheManX4.Forms
                         int start = BitConverter.ToInt32(sprtData, 0);
                         slotInt.Maximum = (start / 4) - 1;
                         slotInt.IsEnabled = true;
-                        arc = arcT;
+                        arc = tmpArc;
                         palBtn.Visibility = Visibility.Visible;
                         palBtn.Width = 76;
                         UpdateTitle();
                         UpdateClutTxt();
                         DrawSpriteFromArc();
-                        textureImg.Source = textures[0];
+                        textureImg.Source = textureBmp;
                         DrawClut();
 
                         //Disable Create Mode buttons
@@ -540,15 +628,16 @@ namespace TeheManX4.Forms
                 if(fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     ARC fileARC = new ARC(File.ReadAllBytes(fd.FileName));
-
+                    byte[] tmp;
                     if (fileARC.ContainsEntry(18))
                     {
                         fileARC.SaveEntry(18, spriteSlots[0].CreateSprtData());
                         //Replace Textures
-                        byte[] tmp = new byte[(int)freeInt.Value * 128];
-                        textures[0].CopyPixels(buffer, 128, 0);
-                        Level.ConvertBmp(buffer);
-                        Array.Copy(buffer, tmp, tmp.Length);
+                        tmp = new byte[Const.MaxHeight * 128];
+                        textureBmp.CopyPixels(tmp, 128, 0);
+                        Array.Resize(ref tmp, (int)freeInt.Value * 128);
+                        Level.ConvertBmp(tmp);
+
                         fileARC.SaveEntry(0x10002, tmp);
                         File.WriteAllBytes(fd.FileName, fileARC.GetEntriesData());
 
@@ -600,11 +689,11 @@ namespace TeheManX4.Forms
 
 
                     //Replace Textures
-                    byte[] tmp2 = new byte[(int)freeInt.Value * 128];
-                    textures[0].CopyPixels(buffer, 128, 0);
-                    Level.ConvertBmp(buffer);
-                    Array.Copy(buffer, tmp2, tmp2.Length);
-                    fileARC.SaveEntry(0x010102, tmp2);
+                    tmp = new byte[Const.MaxHeight * 128];
+                    textureBmp.CopyPixels(tmp, 128, 0);
+                    Array.Resize(ref tmp, (int)freeInt.Value * 128);
+                    Level.ConvertBmp(tmp);
+                    fileARC.SaveEntry(0x010102, tmp);
                     File.WriteAllBytes(fd.FileName, fileARC.GetEntriesData());
 
 
@@ -621,8 +710,6 @@ namespace TeheManX4.Forms
                         byte[] clut = clutArc.LoadEntry(5);
                         for (int i = 0; i < spriteSlots.Count; i++)
                         {
-                            if (i > 9)
-                                break;
                             if (spriteSlots[i].colors.Count == 0)
                                 continue;
                             for (int c = 0; c < 64; c++)
@@ -650,15 +737,14 @@ namespace TeheManX4.Forms
         private void CreateButton_Click(object sender, RoutedEventArgs e)
         {
             mode = 2;
-            var l = Const.GreyScale;
-            l[0] = Color.FromArgb(0, 0, 0, 0);
-            palette[0x40] = new BitmapPalette(l);
-            ClearCanvas();
-            textures.Clear();
+            enable = false;
+            Title = "TeheMan X4 Sprite Editor";
+            ClearCanvas(Colors.Gray, true);
+            ClearTexture();
+            ClearClut();
             quadInt.Value = 0;
-            for (int i = 0; i < 4; i++)
-                textures.Add(new WriteableBitmap(256,  1760, 96, 96, PixelFormats.Indexed4, palette[0x40]));
-            textureImg.Source = textures[0];
+
+            textureImg.Source = textureBmp;
             //Reset SPRT Slots
             spriteSlots.Clear();
             spriteSlots.Add(new Sprite() { cord = 0 });
@@ -676,10 +762,7 @@ namespace TeheManX4.Forms
             palBtn.Width = 100;
             palBtn.Content = "ADD CLUT";
             palBtn.Visibility = Visibility.Visible;
-        }
-
-        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
+            enable = true;
         }
         private void Color_Down(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
@@ -714,18 +797,21 @@ namespace TeheManX4.Forms
             else
             {
                 clutId = Grid.GetRow(sender as UIElement);
-                if (clutId > 60)
-                    clutId = 60;
                 UpdateClutTxt();
-                for (int i = 0; i < 4; i++)
-                {
-                    int size = entrySize / 128;
-                    var b = new WriteableBitmap(256, size, 96, 96, PixelFormats.Indexed4, palette[clutId + i]);
-                    b.WritePixels(new Int32Rect(0, 0, 256, size), buffer, 128, 0);
-                    textures[i] = b;
-                }
+
+                IntPtr pixelDataPtr = textureBmp.BackBuffer;
+                textureImg.Source = BitmapSource.Create(256,
+                    Const.MaxHeight,
+                    96,
+                    96,
+                    PixelFormats.Indexed4,
+                    palette[clutId],
+                    pixelDataPtr,
+                    Const.MaxHeight * 128,
+                    128);
+
                 DrawSpriteFromArc();
-                textureImg.Source = textures[0];
+                textureImg.Source = textureBmp;
             }
         }
 
@@ -774,20 +860,21 @@ namespace TeheManX4.Forms
                 if ((bool)autoCheck.IsChecked)
                 {
                     clutId = slotId * 4 + 0x18;
-                    if (clutId > 0x3C)
-                        clutId = 0x3C;
-                    for (int i = 0; i < 4; i++)
-                    {
-                        int size = entrySize / 128;
-                        var b = new WriteableBitmap(256, (int)textures[0].Height, 96, 96, PixelFormats.Indexed4, palette[clutId + i]);
-                        b.WritePixels(new Int32Rect(0, 0, 256, size), buffer, 128, 0);
-                        textures[i] = b;
-                    }
+
                     if (slotId * 4 < texCordData.Length)
                         cordInt.Value = BitConverter.ToInt32(texCordData, slotId * 4) >> 7;
                     else
                         cordInt.Value = BitConverter.ToInt32(texCordData, texCordData.Length - 4) >> 7;
-                    textureImg.Source = textures[0];
+                    IntPtr pixelDataPtr = textureBmp.BackBuffer;
+                    textureImg.Source = BitmapSource.Create(256,
+                        Const.MaxHeight,
+                        96,
+                        96,
+                        PixelFormats.Indexed4,
+                        palette[clutId],
+                        pixelDataPtr,
+                        Const.MaxHeight * 128,
+                        128);
                     UpdateClutTxt();
                 }
                 try
@@ -814,26 +901,31 @@ namespace TeheManX4.Forms
                     if(spriteSlots[slotId].colors.Count != 0)
                     {
                         //Set CLUT to texture
-                        textures[0].CopyPixels(buffer, 128, 0);
-                        for (int i = 0; i < 4; i++)
-                        {
-                            var b = new WriteableBitmap(256, (int)textures[0].Height, 96, 96, PixelFormats.Indexed4, palette[slotId * 4 + i]);
-                            b.WritePixels(new Int32Rect(0, 0, 256, (int)textures[0].Height), buffer, 128, 0);
-                            textures[i] = b;
-                        }
+                        IntPtr pixelDataPtr = textureBmp.BackBuffer;
+                        textureImg.Source = BitmapSource.Create(256,
+                            Const.MaxHeight,
+                            96,
+                            96,
+                            PixelFormats.Indexed4,
+                            new BitmapPalette(spriteSlots[slotId].colors),
+                            pixelDataPtr,
+                            Const.MaxHeight * 128,
+                            128);
                     }
                     else
                     {
                         //Set CLUT to texture
-                        textures[0].CopyPixels(buffer, 128, 0);
-                        for (int i = 0; i < 4; i++)
-                        {
-                            var b = new WriteableBitmap(256, (int)textures[0].Height, 96, 96, PixelFormats.Indexed4, palette[0x40]);
-                            b.WritePixels(new Int32Rect(0, 0, 256, (int)textures[0].Height), buffer, 128, 0);
-                            textures[i] = b;
-                        }
+                        IntPtr pixelDataPtr = textureBmp.BackBuffer;
+                        textureImg.Source = BitmapSource.Create(256,
+                            Const.MaxHeight,
+                            96,
+                            96,
+                            PixelFormats.Indexed4,
+                            Const.GreyScalePallete,
+                            pixelDataPtr,
+                            Const.MaxHeight * 128,
+                            128);
                     }
-                    textureImg.Source = textures[0];
                     cordInt.Value = spriteSlots[slotId].cord;
 
                     enable = false;
@@ -902,13 +994,9 @@ namespace TeheManX4.Forms
                     byte[] data = new byte[256 * tex.PixelHeight / 2];
                     tex.CopyPixels(data, 128, 0);
 
-                    textures[0].WritePixels(new Int32Rect(0, (int)freeInt.Value, 256, tex.PixelHeight), data, 128, 0);
-                    textures[1].WritePixels(new Int32Rect(0, (int)freeInt.Value, 256, tex.PixelHeight), data, 128, 0);
-                    textures[2].WritePixels(new Int32Rect(0, (int)freeInt.Value, 256, tex.PixelHeight), data, 128, 0);
-                    textures[3].WritePixels(new Int32Rect(0, (int)freeInt.Value, 256, tex.PixelHeight), data, 128, 0);
+                    textureBmp.WritePixels(new Int32Rect(0, (int)freeInt.Value, 256, tex.PixelHeight), data, 128, 0);
                     freeInt.Value += tex.PixelHeight;
-
-                    textureImg.Source = textures[0];
+                    textureImg.Source = textureBmp;
                     DrawSprite();
                 }
             }
@@ -989,13 +1077,18 @@ namespace TeheManX4.Forms
                         }
 
                         //Set CLUT to texture
-                        textures[0].CopyPixels(buffer, 128, 0);
-                        for (int i = 0; i < 4; i++)
-                        {
-                            var b = new WriteableBitmap(256, (int)textures[0].Height, 96, 96, PixelFormats.Indexed4, palette[slotId * 4 + i]);
-                            b.WritePixels(new Int32Rect(0, 0, 256, (int)textures[0].Height), buffer, 128, 0);
-                            textures[i] = b;
-                        }
+                        IntPtr pixelDataPtr = textureBmp.BackBuffer;
+                        textureImg.Source = BitmapSource.Create(256,
+                            Const.MaxHeight,
+                            96,
+                            96,
+                            PixelFormats.Indexed4,
+                            new BitmapPalette(spriteSlots[slotId].colors),
+                            pixelDataPtr,
+                            Const.MaxHeight * 128,
+                            128);
+
+
                         enable = false;
                         DrawSprite();
                         enable = true;
@@ -1023,10 +1116,9 @@ namespace TeheManX4.Forms
                                 data = bossArc.LoadEntry(en.type);
                                 Level.ConvertBmp(data);
                                 for (int i = 0; i < 4; i++)
-                                {
-                                    textures[i].WritePixels(new Int32Rect(0, Const.CordTabe[en.type & 0xFF] - 384, 256, data.Length / 128), data, 128, 0);
-                                }
-                                textureImg.Source = textures[0];
+                                    textureBmp.WritePixels(new Int32Rect(0, Const.CordTabe[en.type & 0xFF] - 384, 256, data.Length / 128), data, 128, 0);
+
+                                textureImg.Source = textureBmp;
                                 if (slotId * 4 < texCordData.Length)
                                     BitConverter.GetBytes((Const.CordTabe[en.type & 0xFF] - 384) << 7).CopyTo(texCordData, slotId * 4);
                                 else
@@ -1049,9 +1141,12 @@ namespace TeheManX4.Forms
                 var p = e.GetPosition(textureImg);
                 int x = (int)p.X;
                 int y = (int)p.Y;
-
+                int cord = spriteSlots[slotId].cord / 16;
                 int cX = Level.GetSelectedTile(x, textureImg.ActualWidth, 16);
                 int cY = Level.GetSelectedTile(y, textureImg.ActualHeight, 110);
+                if (cY < cord)
+                    return;
+                cY -= cord;
                 int page = cY / 16;
 
                 quadCordInt.Value = (page << 8) + cX + ((cY & 0xF) << 4);
@@ -1064,7 +1159,10 @@ namespace TeheManX4.Forms
                 return;
             if (mode == 1)
             {
-            }else if(mode == 2)
+                BitConverter.GetBytes((int)e.NewValue << 7).CopyTo(texCordData, slotId * 4);
+                DrawSpriteFromArc();
+            }
+            else if(mode == 2)
             {
                 spriteSlots[slotId].cord = (int)e.NewValue;
                 DrawSprite();
@@ -1141,7 +1239,6 @@ namespace TeheManX4.Forms
             {
                 UpdateSpriteInfo();
                 UpdateTexCursor();
-                DrawSprite();
             }
         }
 
@@ -1200,7 +1297,104 @@ namespace TeheManX4.Forms
         }
         private void toolsBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (mode < 1 || optionsOpened) return;
 
+            ListWindow win = new ListWindow();
+            win.Title = "Sprite Options";
+            win.Width = 300;
+            win.Height = 280;
+            win.ResizeMode = ResizeMode.NoResize;
+            win.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+
+            Button flipH_Btn = new Button() { Content = "Flip Sprite Horizontally" };
+            flipH_Btn.Click += (s, arg) =>
+            {
+                if (mode != 2)
+                {
+                    MessageBox.Show("You can only edit the Sprites in create mode");
+                    return;
+                }
+
+                if (spriteSlots[slotId].frames.Count == 0)
+                {
+                    MessageBox.Show("There is no frame data in this slot");
+                    return;
+                }
+
+                foreach (var q in spriteSlots[slotId].frames[frameId].quads)
+                {
+                    q.x = (sbyte)-q.x;
+                    if (q.flipH)
+                        q.flipH = false;
+                    else
+                        q.flipH = true;
+                }
+                DrawSprite();
+            };
+            Button flipV_Btn = new Button() { Content = "Flip Sprite Vertically" };
+            flipV_Btn.Click += (s, arg) =>
+            {
+                if (mode != 2)
+                {
+                    MessageBox.Show("You can only edit the Sprites in create mode");
+                    return;
+                }
+
+                if (spriteSlots[slotId].frames.Count == 0)
+                {
+                    MessageBox.Show("There is no frame data in this slot");
+                    return;
+                }
+
+                foreach (var q in spriteSlots[slotId].frames[frameId].quads)
+                {
+                    q.y = (sbyte)-q.y;
+                    if (q.flipV)
+                        q.flipV = false;
+                    else
+                        q.flipV = true;
+                }
+                DrawSprite();
+            };
+            Button importF = new Button() { Content = "Import Frame" };
+            importF.Click += (s, arg) =>
+            {
+                if (mode != 2)
+                {
+                    MessageBox.Show("You can only edit the Sprites in create mode");
+                    return;
+                }
+
+                using (var fd = new System.Windows.Forms.OpenFileDialog())
+                {
+                    fd.Filter = "JSON |*json";
+                    fd.Title = "Select the JSON file containing the frame data";
+
+                    if(fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        Frame frame = JsonConvert.DeserializeObject<Frame>(File.ReadAllText(fd.FileName));
+
+                        if (spriteSlots[slotId].frames.Count != 0)
+                            spriteSlots[slotId].frames[frameId] = frame;
+                        else
+                        {
+                            spriteSlots[slotId].frames = new List<Frame>() { frame };
+                        }
+                        DrawSprite();
+                        MessageBox.Show("Frame Imported!");
+                    }
+                }
+            };
+
+            win.pannel.Children.Add(flipH_Btn);
+            win.pannel.Children.Add(flipV_Btn);
+            win.pannel.Children.Add(importF);
+            win.Closed += (s, arg) =>
+            {
+                optionsOpened = false;
+            };
+            optionsOpened = true;
+            win.Show();
         }
         #endregion Events
     }
