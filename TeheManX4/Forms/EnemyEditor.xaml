@@ -9,92 +9,160 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Background="Black">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto"/>
             <ColumnDefinition/>
+            <ColumnDefinition Width="375"/>
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
         <!--Layout Viewer-->
-        <Viewbox Grid.RowSpan="3">
-            <Canvas x:Name="canvas" Width="512" Height="512" ClipToBounds="True" PreviewMouseMove="canvas_PreviewMouseMove" PreviewMouseUp="canvas_PreviewMouseUp">
+        <Viewbox Grid.ColumnSpan="2" HorizontalAlignment="Left">
+            <Canvas x:Name="canvas" AllowDrop="True" Height="512" ClipToBounds="True" Drop="canvas_Drop" PreviewMouseMove="canvas_PreviewMouseMove" PreviewMouseUp="canvas_PreviewMouseUp">
                 <Image x:Name="layoutImage" x:FieldModifier="public"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </Canvas>
         </Viewbox>
         <Label x:Name="camLbl" Grid.Row="0" IsHitTestVisible="False" Foreground="White" FontFamily="Consolas" HorizontalAlignment="Left" FontSize="20"></Label>
         <!--============-->
 
-        <!--Enemy Type-->
-        <StackPanel Orientation="Horizontal" Grid.Column="1">
-            <Label Foreground="White" FontFamily="Consolas" FontSize="18">Type</Label>
-            <Button>0</Button>
-            <Button>3</Button>
-            <Button>4</Button>
-            <Button>5</Button>
-            <Label Foreground="White" FontFamily="Consolas" FontSize="18" x:Name="nameLbl"></Label>
-        </StackPanel>
-        <!--Selection-->
-        <ScrollViewer Grid.Column="1" Grid.Row="1">
-
-        </ScrollViewer>
-        <!--Enemy Info-->
-        <Grid Grid.Column="1" Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
+        <Grid Grid.Column="1" Background="Black">
             <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
                 <RowDefinition/>
-                <RowDefinition/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
-            <StackPanel Orientation="Vertical">
-                <StackPanel Orientation="Horizontal">
-                    <!--ID-->
-                    <Label Width="65" FontSize="18" Foreground="White" FontFamily="Consolas">ID:</Label>
-                    <local:NumInt x:Name="idInt" Width="60" ButtonSpinnerWidth="20" FontSize="20" Value="0" Maximum="#FF" Minimum="0" MaxLength="3" ValueChanged="idInt_ValueChanged" IsUndoEnabled="False" IsEnabled="False"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <!--Var-->
-                    <Label Width="65" FontSize="18" Foreground="White" FontFamily="Consolas">Var:</Label>
-                    <local:NumInt x:Name="varInt" Width="60" ButtonSpinnerWidth="20" FontSize="22" Value="0" Maximum="#FF" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="varInt_ValueChanged"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <!--Type-->
-                    <Label Width="65" FontSize="18" Foreground="White" FontFamily="Consolas">Type:</Label>
-                    <local:NumInt x:Name="typeInt" Width="60" ButtonSpinnerWidth="20" FontSize="22" Value="0" Maximum="#5" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="typeInt_ValueChanged"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <!--Type-->
-                    <Label  Width="65" FontSize="17" Foreground="White" FontFamily="Consolas">Range:</Label>
-                    <local:NumInt x:Name="rangeInt" Width="60" ButtonSpinnerWidth="20" FontSize="22" Value="0" Maximum="#5" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="rangeInt_ValueChanged"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                </StackPanel>
-            </StackPanel>
+            <!--Enemy Type-->
             <StackPanel Orientation="Horizontal">
+                <Label Foreground="White" FontFamily="Consolas" FontSize="18">Type</Label>
+                <Button>0</Button>
+                <Button>3</Button>
+                <Button>4</Button>
+                <Button>5</Button>
+                <Label Foreground="White" FontFamily="Consolas" FontSize="18" x:Name="nameLbl"></Label>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-            </StackPanel>
-            <StackPanel Grid.Column="1" VerticalAlignment="Bottom">
-                <!--X-->
-                <StackPanel Orientation="Horizontal">
-                    <Label FontSize="33" Foreground="White" FontFamily="Consolas" Padding="3,3,0,3">X:</Label>
-                    <local:NumInt x:Name="xInt" ButtonSpinnerWidth="20" Width="100" Height="40" FontSize="33" Value="0" Maximum="#1FFF" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="xInt_ValueChanged"/>
+            <!--Selection-->
+            <ScrollViewer Focusable="False" Background="#050505" Grid.Row="1" Width="375" HorizontalAlignment="Right">
+                <VirtualizingStackPanel>
+                    <Image Width="92" Uid="0"  Source="..\Resources\EnemyPhotos\Eregion.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="70" Uid="2"  Source="..\Resources\EnemyPhotos\Item Carrier.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="78" Uid="3"  Source="..\Resources\EnemyPhotos\Spike Marl.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="42" Uid="5"  Source="..\Resources\EnemyPhotos\Bees.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="170" Uid="6"  Source="..\Resources\EnemyPhotos\Mad Bull.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="90" Uid="7"  Source="..\Resources\EnemyPhotos\Trap Blaster.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="128" Uid="8"  Source="..\Resources\EnemyPhotos\Eregion 2.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="132" Uid="A"  Source="..\Resources\EnemyPhotos\Tonboroid S.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="48" Uid="B"  Source="..\Resources\EnemyPhotos\Fly Gunner.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="80" Uid="C"  Source="..\Resources\EnemyPhotos\Killer Fisher.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="124" Uid="D"  Source="..\Resources\EnemyPhotos\E-AT.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="110" Uid="E"  Source="..\Resources\EnemyPhotos\Ice Wing.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="52" Uid="F"  Source="..\Resources\EnemyPhotos\Met.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="118" Uid="10"  Source="..\Resources\EnemyPhotos\King Pseidon.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="52" Uid="11"  Source="..\Resources\EnemyPhotos\Snowman.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="80" Uid="12"  Source="..\Resources\EnemyPhotos\Eyeezard.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="80" Uid="13"  Source="..\Resources\EnemyPhotos\Octo.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="152" Uid="16"  Source="..\Resources\EnemyPhotos\Hive.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="122" Uid="17"  Source="..\Resources\EnemyPhotos\Knot S.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="56" Uid="18"  Source="..\Resources\EnemyPhotos\Dejira.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="76" Uid="19"  Source="..\Resources\EnemyPhotos\Snake.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="110" Uid="1B"  Source="..\Resources\EnemyPhotos\Gaurd.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="54" Uid="1C"  Source="..\Resources\EnemyPhotos\Spider Core.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="44" Uid="1D"  Source="..\Resources\EnemyPhotos\Core of Spider.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="56" Uid="1E"  Source="..\Resources\EnemyPhotos\Togerics (Bud).bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="66" Uid="1F"  Source="..\Resources\EnemyPhotos\Togerics (Thorn).bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="94" Uid="20"  Source="..\Resources\EnemyPhotos\Bats.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="94" Uid="21"  Source="..\Resources\EnemyPhotos\Tentoroid.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="96" Uid="23"  Source="..\Resources\EnemyPhotos\Spikey.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="96" Uid="24"  Source="..\Resources\EnemyPhotos\Miru Toraeru.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="108" Uid="25"  Source="..\Resources\EnemyPhotos\Tentoroid RS.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="194" Uid="26"  Source="..\Resources\EnemyPhotos\Plasma Cannon.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="88" Uid="27"  Source="..\Resources\EnemyPhotos\Tentoroid BS Down.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="120" Uid="29"  Source="..\Resources\EnemyPhotos\Ball.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="34" Uid="2A"  Source="..\Resources\EnemyPhotos\Triscan.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="130" Uid="2B"  Source="..\Resources\EnemyPhotos\Web Spider.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="62" Uid="2C"  Source="..\Resources\EnemyPhotos\Floating Spike.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="62" Uid="30"  Source="..\Resources\EnemyPhotos\Hover Gunner.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="88" Uid="31"  Source="..\Resources\EnemyPhotos\Knot.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="168" Uid="33"  Source="..\Resources\EnemyPhotos\Giga Death.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="68" Uid="34"  Source="..\Resources\EnemyPhotos\Walk Shooter.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="206" Uid="35"  Source="..\Resources\EnemyPhotos\Biker.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="170" Uid="36"  Source="..\Resources\EnemyPhotos\Slash Beast.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="170" Uid="37"  Source="..\Resources\EnemyPhotos\StingRay (Flying).bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="170" Uid="38"  Source="..\Resources\EnemyPhotos\StingRay.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="372" Uid="39"  Source="..\Resources\EnemyPhotos\Walrus.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="62" Uid="3A"  Source="..\Resources\EnemyPhotos\Beam Cannon.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="142" Uid="3C"  Source="..\Resources\EnemyPhotos\Storm Owl.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="92" Uid="3D"  Source="..\Resources\EnemyPhotos\Mushroom.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="219" Uid="3E"  Source="..\Resources\EnemyPhotos\Prominence.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="236" Uid="3F"  Source="..\Resources\EnemyPhotos\UFO.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="180" Uid="40"  Source="..\Resources\EnemyPhotos\Peacock.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="122" Uid="41"  Source="..\Resources\EnemyPhotos\Dragoon.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="240" Uid="42"  Source="..\Resources\EnemyPhotos\Iris.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="320" Uid="43"  Source="..\Resources\EnemyPhotos\Metal Hawk.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="188" Uid="44"  Source="..\Resources\EnemyPhotos\Sigma.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="122" Uid="45"  Source="..\Resources\EnemyPhotos\Colonel.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="64" Uid="46"  Source="..\Resources\EnemyPhotos\Generaid Core.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="120" Uid="47"  Source="..\Resources\EnemyPhotos\Raiden.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="140" Uid="49"  Source="..\Resources\EnemyPhotos\Double.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="302" Uid="4A"  Source="..\Resources\EnemyPhotos\Earth Sigma.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="396" Uid="4B"  Source="..\Resources\EnemyPhotos\General.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="42" Uid="4C"  Source="..\Resources\EnemyPhotos\Gabyoall.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="60" Uid="408"  Source="..\Resources\EnemyPhotos\Boss Gate.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="180" Uid="41A"  Source="..\Resources\EnemyPhotos\Capsule.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                </VirtualizingStackPanel>
+            </ScrollViewer>
+            <!--Enemy Info-->
+            <Grid Grid.Column="1" Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <!--ID-->
+                        <Label Width="65" FontSize="18" Foreground="White" FontFamily="Consolas">ID:</Label>
+                        <local:NumInt x:Name="idInt" Width="60" ButtonSpinnerWidth="20" FontSize="20" Value="0" Maximum="#FF" Minimum="0" MaxLength="3" ValueChanged="idInt_ValueChanged" IsUndoEnabled="False" IsEnabled="False"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <!--Var-->
+                        <Label Width="65" FontSize="18" Foreground="White" FontFamily="Consolas">Var:</Label>
+                        <local:NumInt x:Name="varInt" Width="60" ButtonSpinnerWidth="20" FontSize="22" Value="0" Maximum="#FF" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="varInt_ValueChanged"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <!--Type-->
+                        <Label Width="65" FontSize="18" Foreground="White" FontFamily="Consolas">Type:</Label>
+                        <local:NumInt x:Name="typeInt" Width="60" ButtonSpinnerWidth="20" FontSize="22" Value="0" Maximum="#5" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="typeInt_ValueChanged"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <!--Type-->
+                        <Label  Width="65" FontSize="17" Foreground="White" FontFamily="Consolas">Range:</Label>
+                        <local:NumInt x:Name="rangeInt" Width="60" ButtonSpinnerWidth="20" FontSize="22" Value="0" Maximum="#5" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="rangeInt_ValueChanged"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                    </StackPanel>
                 </StackPanel>
-                <!--Y-->
                 <StackPanel Orientation="Horizontal">
-                    <Label FontSize="33" Foreground="White" FontFamily="Consolas" Padding="3,3,0,3">Y:</Label>
-                    <local:NumInt x:Name="yInt" ButtonSpinnerWidth="20" Width="100" Height="40" FontSize="33" Value="0" Maximum="#1FFF" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="yInt_ValueChanged"/>
                 </StackPanel>
-            </StackPanel>
-            <WrapPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2">
-                <Button Margin="5,30,5,5" Width="85" Height="35" Click="AddEnemy_Click">Add</Button>
-                <Button Margin="5,30,5,5" Width="85" Height="35" Click="RemoveEnemy_Click">Remove</Button>
-                <Button Margin="5,30,5,5" Width="85" Height="35" Click="ToolsBtn_Click" HorizontalAlignment="Left">Tools</Button>
-                <Button Margin="5,30,5,5" Width="30" Height="30" Padding="0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Help_Click">?</Button>
-            </WrapPanel>
+                <StackPanel Orientation="Horizontal">
+                </StackPanel>
+                <StackPanel Grid.Column="1" VerticalAlignment="Bottom">
+                    <!--X-->
+                    <StackPanel Orientation="Horizontal">
+                        <Label FontSize="33" Foreground="White" FontFamily="Consolas" Padding="3,3,0,3">X:</Label>
+                        <local:NumInt x:Name="xInt" ButtonSpinnerWidth="20" Width="100" Height="40" FontSize="33" Value="0" Maximum="#1FFF" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="xInt_ValueChanged"/>
+                    </StackPanel>
+                    <!--Y-->
+                    <StackPanel Orientation="Horizontal">
+                        <Label FontSize="33" Foreground="White" FontFamily="Consolas" Padding="3,3,0,3">Y:</Label>
+                        <local:NumInt x:Name="yInt" ButtonSpinnerWidth="20" Width="100" Height="40" FontSize="33" Value="0" Maximum="#1FFF" Minimum="0" MaxLength="3" IsEnabled="False" ValueChanged="yInt_ValueChanged"/>
+                    </StackPanel>
+                </StackPanel>
+                <WrapPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2">
+                    <Button Margin="5,30,5,5" Width="85" Height="35" Click="AddEnemy_Click">Add</Button>
+                    <Button Margin="5,30,5,5" Width="85" Height="35" Click="RemoveEnemy_Click">Remove</Button>
+                    <Button Margin="5,30,5,5" Width="85" Height="35" Click="ToolsBtn_Click" HorizontalAlignment="Left">Tools</Button>
+                    <Button Margin="5,30,5,5" Width="30" Height="30" Padding="0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Help_Click">?</Button>
+                </WrapPanel>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

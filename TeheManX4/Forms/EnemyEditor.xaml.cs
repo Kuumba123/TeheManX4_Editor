@@ -13,8 +13,7 @@ namespace TeheManX4.Forms
     public partial class EnemyEditor : UserControl
     {
         #region Properties
-        WriteableBitmap bmp = new WriteableBitmap(512, 512, 96, 96, PixelFormats.Rgb24, null);
-        byte[] pixels = new byte[0xC0000];
+        internal WriteableBitmap bmp = new WriteableBitmap(768, 512, 96, 96, PixelFormats.Rgb24, null);
         public int viewerX = 0x400;
         public int viewerY = 0;
         UIElement obj;
@@ -36,17 +35,17 @@ namespace TeheManX4.Forms
             bmp.Lock();
             for (int y = 0; y < 2; y++)
             {
-                for (int x = 0; x < 2; x++)
+                for (int x = 0; x < 3; x++)
                 {
                     int offsetX = (MainWindow.window.enemyE.viewerX >> 8) + x;
                     int offsetY = (MainWindow.window.enemyE.viewerY >> 8) + y;
                     if (offsetX > PSX.levels[Level.Id].width - 1 || offsetY > PSX.levels[Level.Id].height - 1)
-                        Level.DrawScreen(0, x * 256, y * 256, 1536, bmp.BackBuffer);
+                        Level.DrawScreen(0, x * 256, y * 256, bmp.BackBufferStride, bmp.BackBuffer);
                     else
-                        Level.DrawScreen(PSX.levels[Level.Id].layout[offsetX + offsetY * PSX.levels[Level.Id].width + PSX.levels[Level.Id].size * Level.BG], x * 256, y * 256, 1536, bmp.BackBuffer);
+                        Level.DrawScreen(PSX.levels[Level.Id].layout[offsetX + offsetY * PSX.levels[Level.Id].width + PSX.levels[Level.Id].size * Level.BG], x * 256, y * 256, bmp.BackBufferStride, bmp.BackBuffer);
                 }
             }
-            bmp.AddDirtyRect(new Int32Rect(0, 0, 512, 512));
+            bmp.AddDirtyRect(new Int32Rect(0, 0, bmp.PixelWidth, 512));
             bmp.Unlock();
             MainWindow.window.enemyE.layoutImage.Source = bmp;
         }
@@ -80,7 +79,7 @@ namespace TeheManX4.Forms
             //Add Each Enemy if ON SCREEN
             foreach (var e in PSX.levels[Level.Id].enemies)
             {
-                if (e.x < viewerX || e.x > viewerX + 0x1FF || e.y < viewerY || e.y > viewerY + 0x1FF)
+                if (e.x < viewerX || e.x > viewerX + (bmp.Width - 1) || e.y < viewerY || e.y > viewerY + 0x1FF)
                     continue;
                 if (MainWindow.window.enemyE.canvas.Children[offset].GetType() != typeof(EnemyLabel))
                     offset++;
@@ -157,6 +156,28 @@ namespace TeheManX4.Forms
         {
             MainWindow.window.enemyE.nameLbl.Content = GetObjectName(id, type);
         }
+        private bool ValidEnemyAdd()
+        {
+            if (PSX.levels[Level.Id].GetIndex() > 25)
+            {
+                MessageBox.Show("There are not suppoused to be enemies in this level");
+                return false;
+            }
+            if (Level.enemyExpand)
+            {
+                if (PSX.levels[Level.Id].enemies.Count == 255)
+                {
+                    MessageBox.Show("Max amount of regular enemies is 255");
+                    return false;
+                }
+            }
+            //Add Enemy
+            if (Level.enemyExpand)
+                PSX.levels[Level.Id].edit = true;
+            else
+                PSX.edit = true;
+            return true;
+        }
         #endregion Methods
 
         #region Events
@@ -181,10 +202,6 @@ namespace TeheManX4.Forms
                     MainWindow.window.enemyE.idInt.Value = id;
                     MainWindow.window.enemyE.varInt.Value = var;
                     MainWindow.window.enemyE.typeInt.Value = type;
-                    MainWindow.window.enemyE.xInt.Minimum = viewerX;
-                    MainWindow.window.enemyE.xInt.Maximum = viewerX + 0x1FF;
-                    MainWindow.window.enemyE.yInt.Minimum = viewerY;
-                    MainWindow.window.enemyE.yInt.Maximum = viewerY + 0x1FF;
                     //Enable
                     MainWindow.window.enemyE.idInt.IsEnabled = true;
                     MainWindow.window.enemyE.varInt.IsEnabled = true;
@@ -256,24 +273,7 @@ namespace TeheManX4.Forms
         }
         private void AddEnemy_Click(object sender, RoutedEventArgs e)
         {
-            if (PSX.levels[Level.Id].GetIndex() > 25)
-            {
-                MessageBox.Show("There are not suppoused to be enemies in this level");
-                return;
-            }
-            if (Level.enemyExpand)
-            {
-                if(PSX.levels[Level.Id].enemies.Count == 255)
-                {
-                    MessageBox.Show("Max amount of regular enemies is 255");
-                    return;
-                }
-            }
-            //Add Enemy
-            if (Level.enemyExpand)
-                PSX.levels[Level.Id].edit = true;
-            else
-                PSX.edit = true;
+            if (!ValidEnemyAdd()) return;
             var en = new Enemy();
             en.x = (short)(viewerX + 0x100);
             en.y = (short)(viewerY + 0x100);
@@ -321,17 +321,14 @@ namespace TeheManX4.Forms
                 x = 0 - Const.EnemyOffset;
             if (y < 0 - Const.EnemyOffset)
                 y = 0 - Const.EnemyOffset;
-            if (x > 511 - Const.EnemyOffset)
-                x = 511 - Const.EnemyOffset;
-            if (y > 511 - Const.EnemyOffset)
-                y = 511 - Const.EnemyOffset;
+
 
             Canvas.SetLeft(obj, x);
             Canvas.SetTop(obj, y);
             UpdateEnemyCordLabel((int)x, (int)y);
             var en = (Enemy)((EnemyLabel)obj).Tag;
-            en.x = (short)((short)((viewerX & 0x1F00) + x) + Const.EnemyOffset);
-            en.y = (short)((short)((viewerY & 0x1F00) + y) + Const.EnemyOffset);
+            en.x = (short)((short)(viewerX + x) + Const.EnemyOffset);
+            en.y = (short)((short)(viewerY + y) + Const.EnemyOffset);
             if (Level.enemyExpand)
                 PSX.levels[Level.Id].edit = true;
             else
@@ -345,6 +342,49 @@ namespace TeheManX4.Forms
             obj = null;
             down = false;
             canvas.ReleaseMouseCapture();
+        }
+        private void EnemyImage_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                DragDrop.DoDragDrop(sender as Image,Convert.ToInt32(((Image)sender).Uid,16), DragDropEffects.Move);
+        }
+        private void EnemyImage_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            int value = Convert.ToInt32(((UIElement)sender).Uid,16);
+            byte id = (byte)(value & 0xFF);
+            byte type = (byte)((value >> 8) & 0xFF);
+            string info = GetObjectInfo(id, type);
+            if (info != "")
+                MessageBox.Show(info);
+        }
+        private void canvas_Drop(object sender, DragEventArgs e)
+        {
+            if (!ValidEnemyAdd()) return;
+
+            var pos = e.GetPosition(MainWindow.window.enemyE.layoutImage);
+            double x = pos.X + viewerX;
+            double y = pos.Y + viewerY;
+
+            //Border Checks
+            if (x < 0)
+                x = 0;
+            if (y < 0)
+                y = 0;
+
+
+            int value = (int)e.Data.GetData(typeof(int));
+            byte id = (byte)(value & 0xFF);
+            byte type = (byte)((value >> 8) & 0xFF);
+            byte var = (byte)((value >> 16) & 0xFF);
+
+            var en = new Enemy();
+            en.x = (short)x;
+            en.y = (short)y;
+            en.id = id;
+            en.type = type;
+            en.var = var;
+            PSX.levels[Level.Id].enemies.Add(en);
+            DrawEnemies();
         }
         #endregion Events
     }

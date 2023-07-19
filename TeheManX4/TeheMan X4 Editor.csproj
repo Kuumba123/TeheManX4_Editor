@@ -25,6 +25,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -325,6 +326,207 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\MMX4B_Testtiles.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Eregion.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Item Carrier.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Spike Marl.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Bees.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Mad Bull.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Trap Blaster.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Eregion 2.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Tonboroid S.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Fly Gunner.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Killer Fisher.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\E-AT.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Ice Wing.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Met.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\King Pseidon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Snowman.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Eyeezard.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Octo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Hive.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Knot S.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Dejira.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Snake.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Gaurd.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Spider Core.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Core of Spider.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Togerics %28Bud%29.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Togerics %28Thorn%29.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Bats.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Tentoroid.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Spikey.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Miru Toraeru.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Tentoroid BS.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Tentoroid BS Down.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Tentoroid RS.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Beam Cannon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Boss Gate.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Ball.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Triscan.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Web Spider.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Floating Spike.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Hover Gunner.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Knot.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Giga Death.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Walk Shooter.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Biker.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Slash Beast.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\StingRay %28Flying%29.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\StingRay.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Walrus.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Walrus Small.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Plasma Cannon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Storm Owl.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Mushroom.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Prominence.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\UFO.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Peacock.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Dragoon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Iris.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Metal Hawk.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Sigma.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Colonel.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Generaid Core.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Raiden.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Double.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Earth Sigma.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\General.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Gabyoall.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Capsule.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

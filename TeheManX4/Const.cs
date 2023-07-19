@@ -7,9 +7,10 @@ namespace TeheManX4
     static class Const
     {
         public static readonly string reproURL = "https://api.github.com/repos/Kuumba123/TeheManX4_Editor/releases/latest";
-        public const string Version = "1.1";
+        public const string Version = "1.1.1";
         public static readonly string[] pastVersions =
         {
+            "1.1.1",
             "1.1",
             "1.0"
         };
@@ -172,7 +173,7 @@ namespace TeheManX4
             {0x43,("Metal Hawk (Blue Ship)","") },
             {0x44,("Sigma (1st/2nd Phase)","") },
             {0x45,("Colonel","") },
-            {0x46,("Generaid Core (Owl Mid Boss)","") },
+            {0x46,("Generaid Core","") },
             {0x47,("Raiden (Ride-Armor)","") },
             {0x49,("Double","") },
             {0x4A,("Gunner/Earth Sigma","") },

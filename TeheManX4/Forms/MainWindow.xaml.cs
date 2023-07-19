@@ -44,6 +44,7 @@ namespace TeheManX4
                     window.layoutE.selectImage.MaxWidth = Y;
                     window.screenE.tileImage.MaxWidth = Y;
                     window.x16E.textureImage.MaxWidth = Y;
+                    window.enemyE.canvas.Width = window.enemyE.bmp.PixelWidth;
                 }
 
                 //Open Settings
@@ -170,7 +171,7 @@ namespace TeheManX4
         }
         public void UpdateEnemyViewerCam()
         {
-            window.enemyE.camLbl.Content = "X:" + Convert.ToString(window.enemyE.viewerX >> 8, 16).PadLeft(2, '0').ToUpper() + " Y:" + Convert.ToString(window.enemyE.viewerY >> 8, 16).PadLeft(2, '0').ToUpper();
+            window.enemyE.camLbl.Content = "X:" + Convert.ToString(window.enemyE.viewerX, 16).PadLeft(4, '0').ToUpper() + " Y:" + Convert.ToString(window.enemyE.viewerY, 16).PadLeft(4, '0').ToUpper();
         }
         private void OpenGame()
         {
@@ -387,7 +388,7 @@ namespace TeheManX4
                 if (Level.BG != 0)
                 {
                     Level.BG = 0;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     window.layoutE.UpdateBtn();
                     window.enemyE.Draw();
                     if (ListWindow.screenViewOpen)
@@ -403,7 +404,7 @@ namespace TeheManX4
                 if (Level.BG != 1)
                 {
                     Level.BG = 1;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     window.layoutE.UpdateBtn();
                     window.enemyE.Draw();
                     if (ListWindow.screenViewOpen)
@@ -418,7 +419,7 @@ namespace TeheManX4
                 if (Level.BG != 2)
                 {
                     Level.BG = 2;
-                    window.layoutE.DrawLayout();
+                    window.layoutE.DrawLayout(true);
                     window.layoutE.UpdateBtn();
                     window.enemyE.Draw();
                     if (ListWindow.screenViewOpen)
@@ -527,6 +528,53 @@ namespace TeheManX4
                     window.enemyE.viewerX -= 0x100;
                     window.enemyE.ReDraw();
                     UpdateEnemyViewerCam();
+                }
+            }
+            else if (key == "D1")
+            {
+                if (Level.BG != 0)
+                {
+                    Level.BG = 0;
+                    window.layoutE.DrawLayout(true);
+                    window.layoutE.UpdateBtn();
+                    window.enemyE.Draw();
+                    if (ListWindow.screenViewOpen)
+                    {
+                        layoutWindow.DrawScreens();
+                        layoutWindow.Title = "All Screens in Layer " + (Level.BG + 1);
+                    }
+
+                }
+            }
+            else if (key == "D2")
+            {
+                if (Level.BG != 1)
+                {
+                    Level.BG = 1;
+                    window.layoutE.DrawLayout(true);
+                    window.layoutE.UpdateBtn();
+                    window.enemyE.Draw();
+                    if (ListWindow.screenViewOpen)
+                    {
+                        layoutWindow.DrawScreens();
+                        layoutWindow.Title = "All Screens in Layer " + (Level.BG + 1);
+                    }
+                }
+            }
+            else if (key == "D3")
+            {
+                if (Level.BG != 2)
+                {
+                    Level.BG = 2;
+                    window.layoutE.DrawLayout(true);
+                    window.layoutE.UpdateBtn();
+                    window.enemyE.Draw();
+                    if (ListWindow.screenViewOpen)
+                    {
+                        layoutWindow.DrawScreens();
+                        layoutWindow.Title = "All Screens in Layer " + (Level.BG + 1);
+
+                    }
                 }
             }
         }
