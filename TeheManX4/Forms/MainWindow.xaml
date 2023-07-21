@@ -85,6 +85,12 @@
                     </TabItem.Header>
                     <forms:CameraEditor x:Name="camE"/>
                 </TabItem>
+                <TabItem Name="animeTab">
+                    <TabItem.Header>
+                        <Button Style="{StaticResource TabButton}">Anime</Button>
+                    </TabItem.Header>
+                    <forms:AnimeEditor x:Name="animeE"/>
+                </TabItem>
             </dragablz:TabablzControl>
         </dockablz:Layout>
     </Grid>

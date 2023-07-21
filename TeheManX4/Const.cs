@@ -7,9 +7,10 @@ namespace TeheManX4
     static class Const
     {
         public static readonly string reproURL = "https://api.github.com/repos/Kuumba123/TeheManX4_Editor/releases/latest";
-        public const string Version = "1.1.1";
+        public const string Version = "1.2";
         public static readonly string[] pastVersions =
         {
+            "1.2",
             "1.1.1",
             "1.1",
             "1.0"
@@ -106,13 +107,13 @@ namespace TeheManX4
 
         public static Dictionary<byte, (string name, string info)> mainObjInfo = new Dictionary<byte, (string name, string info)>()
         {
-            {0, ("Dragon","") },
+            {0, ("Eregion","") },
             {2, ("Item-Carrier","") },
             {3, ("Spike Marl","") },
             {5, ("Bees","") },
             {6, ("Mad Bull","") },
             {7, ("Trap Blast (Claws)","") },
-            {8, ("Dragon (Boss)","") },
+            {8, ("Eregion (Boss)","") },
             {0xA, ("Tonboroid S","") },
             {0xB, ("Fly Guner","") },
             {0xC, ("Kill Fisher","") },
@@ -123,7 +124,7 @@ namespace TeheManX4
             {0x11, ("Snowman (Yukidarubon)","") },
             {0x12,("Eyezard (mid-boss)","") },
             {0x13,("Octo Battery","") },
-            {0x14,("Ice Blox (Blaster inside","") },
+            {0x14,("Ice Block (w/ Blaster)","") },
             {0x15,("Icicle","") },
             {0x16,("Bee Hive","") },
             {0x17,("Knot S","") },
@@ -153,10 +154,10 @@ namespace TeheManX4
             {0x2F,("DG-42L (Train Mid-Boss)","") },
             {0x30,("Hover Gunner","") },
             {0x31,("Knots","Use the same slot as the Train splitting Knot!\nRef ID: 22") },
-            {0x32,("Boxes (in Slash Beast)","\nRef ID: 28") },
+            {0x32,("Boxes","\nRef ID: 28") },
             {0x33,("Giga Death","") },
             {0x34,("Walk Shooter","") },
-            {0x35,("Biker","") },
+            {0x35,("Hornet (Biker)","") },
             {0x36,("Slash Beast","") },
             {0x37,("Jet StingRay (Flying)","") },
             {0x38,("Jet StingRay","Different Ref ID from the other version") },
@@ -178,13 +179,16 @@ namespace TeheManX4
             {0x49,("Double","") },
             {0x4A,("Gunner/Earth Sigma","") },
             {0x4B,("General","") },
-            {0x4C,("MM1 Floor Enemies","") }
+            {0x4C,("Gabyoall","") }
         };
         public static Dictionary<byte, (string name, string info)> itemObjInfo = new Dictionary<byte, (string name, string info)>()
         {
             {2,("Items","You get a different Item depending on the Var setting to.\n0 = Small-Health\n1 = Big-Health\n2 = Small-Ammo\n3 = Big-Ammo\n4 = 1UP\n5 = Full-Health\n6 = Full-Ammo\n7-E = Hearts\nF-10 = E-Tank\n11 = W-Tank\n12 = EX-Tank") },
+            {7,("Ice Platform","Ref Id: 87") },
             {8,("Boss Gate","\nRef ID: 80") },
-            {0xD,("Vertical Door","\nRef ID: 81") },
+            {9,("Moving Platform","Ref ID: A1") },
+            {0xD,("Vertical Door","Ref ID: 81") },
+            {0x18,("Wall","Ref ID: 9E") },
             {0x1A, ("Capsule","You get a different Upgrade depending on the Var setting to.\nRef ID: A2\n0 = Helmet\n1 = Body\n2 = Arm (Multi Shot)\n3 = Arm (Plasma)\n4 = Leg") },
             {0x1B, ("Refights Teleporter","Ref ID: 88") }
         };
@@ -194,7 +198,8 @@ namespace TeheManX4
             {3,("Clut Anime","") },
             {5,("Slippery Slopes","Should be placed as an Start Enemy") },
             {6,("Checkpoint","Lower  4 bits is the new Checkpoint Id") },
-            {0x1E, ("Ride Armor Spawner","Set the Var Const. to 1 for the Eagle Armor\nRef ID: 86") }
+            {0x1E, ("Ride Armor Spawner","Set the Var to 1 for the Eagle Armor\nRef ID: 86") },
+            {0x21, ("Vertical Meteor Spawner","") }
         };
         public const uint FileDataAddress = 0x800f0e18;
         public static readonly string CachName = "CACH.BIN";

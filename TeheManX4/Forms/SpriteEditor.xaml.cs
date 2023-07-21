@@ -1385,10 +1385,16 @@ namespace TeheManX4.Forms
                     }
                 }
             };
+            Button snap = new Button() { Content = "Snap Shot" };
+            snap.Click += (s, arg) =>
+            {
+
+            };
 
             win.pannel.Children.Add(flipH_Btn);
             win.pannel.Children.Add(flipV_Btn);
             win.pannel.Children.Add(importF);
+            win.pannel.Children.Add(snap);
             win.Closed += (s, arg) =>
             {
                 optionsOpened = false;

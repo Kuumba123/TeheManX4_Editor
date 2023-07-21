@@ -12,6 +12,10 @@ namespace TeheManX4.Forms
     /// </summary>
     public partial class EnemyEditor : UserControl
     {
+        #region Constants
+        internal const int EffectObjectsScrollOffsets = 6863;
+        #endregion Constants
+
         #region Properties
         internal WriteableBitmap bmp = new WriteableBitmap(768, 512, 96, 96, PixelFormats.Rgb24, null);
         public int viewerX = 0x400;
@@ -385,6 +389,16 @@ namespace TeheManX4.Forms
             en.var = var;
             PSX.levels[Level.Id].enemies.Add(en);
             DrawEnemies();
+        }
+        private void MainObject_Click(object sender, RoutedEventArgs e)
+        {
+            if (bar.VerticalOffset != 0)
+                bar.ScrollToTop(); //6865
+        }
+        private void EffectObject_Click(object sender, RoutedEventArgs e)
+        {
+            if (bar.VerticalOffset != EffectObjectsScrollOffsets)
+                bar.ScrollToVerticalOffset(EffectObjectsScrollOffsets); //6865
         }
         #endregion Events
     }

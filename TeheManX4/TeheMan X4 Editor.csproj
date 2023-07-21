@@ -71,6 +71,9 @@
     <Compile Include="Forms\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Forms\AnimeEditor.xaml.cs">
+      <DependentUpon>AnimeEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ArcEntry.xaml.cs">
       <DependentUpon>ArcEntry.xaml</DependentUpon>
     </Compile>
@@ -139,6 +142,10 @@
     <Compile Include="WriteFile.cs" />
     <Compile Include="XA.cs" />
     <Page Include="Forms\AboutWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Forms\AnimeEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -527,6 +534,51 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\EnemyPhotos\Capsule.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Big HP.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Big Ammo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\1UP.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Small HP.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Small Ammo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Full HP.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Full Ammo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Etank.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\ExTank.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Heart.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Wtank.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Ride Armor.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Ride Armor Eagle.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\ICE_CUBE.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Vertical Meteor.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

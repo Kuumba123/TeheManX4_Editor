@@ -54,7 +54,11 @@ namespace TeheManX4.Forms
             $"The total enemies count does not include the start enemies and " +
             $"lastly you can also edit the amount of 16x16 tiles and the amount of screens per level. " +
             $"there is no real limet you have to worry about while editing these to parameters , just make sure " +
-            $"you rebuild the disc before messing with the real-time level editing (Reload button)"
+            $"you rebuild the disc before messing with the real-time level editing (Reload button)",
+            //6
+            "This is where you can edit the Clut Animes , everything for the most part is pretty simple just keep in mind that " +
+            "the if the timer value is less than 0 (its being shown as hex but treat it as signed) it means to be go back " +
+            "that about of frames."
         };
         public HelpWindow(int msgId)
         {

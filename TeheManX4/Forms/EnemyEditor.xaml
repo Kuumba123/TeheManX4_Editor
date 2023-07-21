@@ -21,7 +21,7 @@
         <Label x:Name="camLbl" Grid.Row="0" IsHitTestVisible="False" Foreground="White" FontFamily="Consolas" HorizontalAlignment="Left" FontSize="20"></Label>
         <!--============-->
 
-        <Grid Grid.Column="1" Background="Black">
+        <Grid Focusable="False" Grid.Column="1" Background="Black">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition/>
@@ -30,14 +30,14 @@
             <!--Enemy Type-->
             <StackPanel Orientation="Horizontal">
                 <Label Foreground="White" FontFamily="Consolas" FontSize="18">Type</Label>
-                <Button>0</Button>
-                <Button>3</Button>
+                <Button Click="MainObject_Click">0</Button>
+                <Button Click="EffectObject_Click">3</Button>
                 <Button>4</Button>
                 <Button>5</Button>
                 <Label Foreground="White" FontFamily="Consolas" FontSize="18" x:Name="nameLbl"></Label>
             </StackPanel>
             <!--Selection-->
-            <ScrollViewer Focusable="False" Background="#050505" Grid.Row="1" Width="375" HorizontalAlignment="Right">
+            <ScrollViewer x:Name="bar" Focusable="True" Background="Black" Grid.Row="1" Width="375" HorizontalAlignment="Right">
                 <VirtualizingStackPanel>
                     <Image Width="92" Uid="0"  Source="..\Resources\EnemyPhotos\Eregion.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="70" Uid="2"  Source="..\Resources\EnemyPhotos\Item Carrier.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
@@ -60,6 +60,7 @@
                     <Image Width="122" Uid="17"  Source="..\Resources\EnemyPhotos\Knot S.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="56" Uid="18"  Source="..\Resources\EnemyPhotos\Dejira.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="76" Uid="19"  Source="..\Resources\EnemyPhotos\Snake.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="96" Uid="1A"  Source="..\Resources\EnemyPhotos\ICE_CUBE.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="110" Uid="1B"  Source="..\Resources\EnemyPhotos\Gaurd.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="54" Uid="1C"  Source="..\Resources\EnemyPhotos\Spider Core.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="44" Uid="1D"  Source="..\Resources\EnemyPhotos\Core of Spider.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
@@ -102,6 +103,20 @@
                     <Image Width="302" Uid="4A"  Source="..\Resources\EnemyPhotos\Earth Sigma.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="396" Uid="4B"  Source="..\Resources\EnemyPhotos\General.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="42" Uid="4C"  Source="..\Resources\EnemyPhotos\Gabyoall.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="148" Uid="321"  Source="..\Resources\EnemyPhotos\Vertical Meteor.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="116" Uid="31E"  Source="..\Resources\EnemyPhotos\Ride Armor.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="178" Uid="1031E"  Source="..\Resources\EnemyPhotos\Ride Armor Eagle.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="30" Uid="402"  Source="..\Resources\EnemyPhotos\Small HP.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="44" Uid="10402"  Source="..\Resources\EnemyPhotos\Big HP.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="18" Uid="20402"  Source="..\Resources\EnemyPhotos\Small Ammo.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="30" Uid="30402"  Source="..\Resources\EnemyPhotos\Big Ammo.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="36" Uid="40402"  Source="..\Resources\EnemyPhotos\1UP.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="34" Uid="50402"  Source="..\Resources\EnemyPhotos\Full HP.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="38" Uid="60402"  Source="..\Resources\EnemyPhotos\Full Ammo.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="38" Uid="70402"  Source="..\Resources\EnemyPhotos\Heart.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="52" Uid="F0402"  Source="..\Resources\EnemyPhotos\Etank.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="52" Uid="110402"  Source="..\Resources\EnemyPhotos\Wtank.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="62" Uid="120402"  Source="..\Resources\EnemyPhotos\Extank.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="60" Uid="408"  Source="..\Resources\EnemyPhotos\Boss Gate.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="180" Uid="41A"  Source="..\Resources\EnemyPhotos\Capsule.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                 </VirtualizingStackPanel>

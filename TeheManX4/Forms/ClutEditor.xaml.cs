@@ -75,7 +75,6 @@ namespace TeheManX4.Forms
                 {
                     //Create Color
                     Rectangle r = new Rectangle();
-                    r.Fill = Brushes.Blue;
                     r.Focusable = false;
                     r.Width = 16;
                     r.Height = 16;
@@ -239,7 +238,7 @@ namespace TeheManX4.Forms
                     valid = false;
             }
             if (!valid) return;
-
+            ListWindow.isAnime = false;
             ListWindow l = new ListWindow(5);
             l.ShowDialog();
         }

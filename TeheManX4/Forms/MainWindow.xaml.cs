@@ -146,6 +146,7 @@ namespace TeheManX4
             window.spawnE.SetSpawnSettings();
             window.enemyE.ReDraw();
             window.camE.SetupCheckValues();
+            window.animeE.AssignLimits();
             UpdateViewrCam();
             UpdateEnemyViewerCam();
             window.bgE.SetSlotSettings();
@@ -577,6 +578,29 @@ namespace TeheManX4
                     }
                 }
             }
+            else if (key == "PageUp")
+                window.enemyE.bar.ScrollToTop();
+            else if (key == "Next")
+                window.enemyE.bar.ScrollToBottom();
+        }
+        private void AnimeKeyCheck(string key, bool notFocus)
+        {
+            if (!notFocus)  //check if NumInt is focused
+                return;
+            if (PSX.levels[Level.Id].clutAnime == null) return;
+
+            if(key == "Up")
+            {
+                AnimeEditor.clut--;
+                if (AnimeEditor.clut < 0)
+                    AnimeEditor.clut = (PSX.levels[Level.Id].clutAnime.Length / 32) - 1;
+                window.animeE.UpdateClutTxt();
+            }
+            else if(key == "Down")
+            {
+                AnimeEditor.clut = (AnimeEditor.clut + 1) % (PSX.levels[Level.Id].clutAnime.Length / 32);
+                window.animeE.UpdateClutTxt();
+            }
         }
         internal bool SaveFiles(bool current = false /*option for saving current file*/)
         {
@@ -807,6 +831,11 @@ namespace TeheManX4
                     //Check Points
                     await SpawnWindow.WriteCheckPoints();
 
+                    //Clut Anime
+                    if (PSX.levels[Level.Id].clutAnime != null)
+                    {
+                        await Redux.Write(Settings.levelClutAnimeAddress, PSX.levels[Level.Id].clutAnime);
+                    }
 
                     //Textures
                     foreach (var e in PSX.levels[Level.Id].arc.entries)
@@ -1099,6 +1128,11 @@ namespace TeheManX4
                 case "enemyTab":
                     {
                         EnemyKeyCheck(key, nonNumInt);
+                        break;
+                    }
+                case "animeTab":
+                    {
+                        AnimeKeyCheck(key, nonNumInt);
                         break;
                     }
             }

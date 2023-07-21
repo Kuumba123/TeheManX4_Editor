@@ -18,13 +18,14 @@ namespace TeheManX4.Forms
     public partial class ListWindow : Window
     {
         #region Fields
-        public static bool checkpoingGo = false;
-        public static bool screenViewOpen = false;
-        public static bool extraOpen = false;
+        public static bool isAnime;
+        public static bool checkpoingGo;
+        public static bool screenViewOpen;
+        public static bool extraOpen;
         public static bool fileViewOpen;
         public static string tab = "";
         public static int layoutOffset = 0;
-        public static bool enemyOpen = false;
+        public static bool enemyOpen;
         #endregion
 
         #region Properties
@@ -1401,6 +1402,12 @@ namespace TeheManX4.Forms
             this.ResizeMode = ResizeMode.NoResize;
             this.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 
+            int id;
+            if (isAnime)
+                id = AnimeEditor.clut;
+            else
+                id = ClutEditor.clut;
+
             //Create Tool Buttons
             Button cpyBackground = new Button()
             {
@@ -1491,7 +1498,7 @@ namespace TeheManX4.Forms
 
             Button importSet = new Button()
             {
-                Content = $"Replace at Clut {Convert.ToString(ClutEditor.clut,16).ToUpper()} from Txt"
+                Content = $"Replace at Clut {Convert.ToString(id,16).ToUpper()} from Txt"
             };
             importSet.Click += (s, e) =>
             {
@@ -1524,15 +1531,23 @@ namespace TeheManX4.Forms
                             {
                                 int color = Level.To15Rgb(c.B, c.G, c.R);
 
-                                if (!Level.zeroFlag)
+                                if (isAnime)
                                 {
-                                    BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_X.entries[0].data, (i + (ClutEditor.clut + ClutEditor.bgF * 64) * 16) * 2);
-                                    PSX.levels[Level.Id].megaEdit = true;
+                                    BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clutAnime, AnimeEditor.clut * 32 + i * 2);
+                                    PSX.levels[Level.Id].edit = true;
                                 }
                                 else
                                 {
-                                    BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_Z.entries[0].data, (i + (ClutEditor.clut + ClutEditor.bgF * 64) * 16) * 2);
-                                    PSX.levels[Level.Id].zeroEdit = true;
+                                    if (!Level.zeroFlag)
+                                    {
+                                        BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_X.entries[0].data, (i + (ClutEditor.clut + ClutEditor.bgF * 64) * 16) * 2);
+                                        PSX.levels[Level.Id].megaEdit = true;
+                                    }
+                                    else
+                                    {
+                                        BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_Z.entries[0].data, (i + (ClutEditor.clut + ClutEditor.bgF * 64) * 16) * 2);
+                                        PSX.levels[Level.Id].zeroEdit = true;
+                                    }
                                 }
                                 i++;
                             }
@@ -1540,6 +1555,13 @@ namespace TeheManX4.Forms
 
                             //Close Window
                             Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive).Close();
+
+                            if (isAnime)
+                            {
+                                MainWindow.window.animeE.DrawClut();
+                                return;
+                            }
+
                             Level.AssignPallete();
                             //Updating the rest of GUI
                             MainWindow.window.clutE.DrawTextures();
@@ -1569,7 +1591,7 @@ namespace TeheManX4.Forms
 
             Button importPAL = new Button()
             {
-                Content = $"Replace at Clut {Convert.ToString(ClutEditor.clut, 16).ToUpper()} from PAL"
+                Content = $"Replace at Clut {Convert.ToString(id, 16).ToUpper()} from PAL"
             };
             importPAL.Click += (s, e) =>
             {
@@ -1597,20 +1619,31 @@ namespace TeheManX4.Forms
                                 while (colors.Count < 16) colors.Add(Color.FromRgb(0, 0, 0));
                             }
 
-                            i = (ClutEditor.clut + (ClutEditor.bgF * 64)) * 16 * 2;
+                            if (isAnime)
+                                i = AnimeEditor.clut * 32;
+                            else
+                                i = (ClutEditor.clut + (ClutEditor.bgF * 64)) * 16 * 2;
 
                             foreach (var c in colors)
                             {
                                 int color = Level.To15Rgb(c.B, c.G, c.R);
-                                if (!Level.zeroFlag)
+                                if (isAnime)
                                 {
-                                    BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_X.entries[0].data, i);
-                                    PSX.levels[Level.Id].megaEdit = true;
+                                    BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clutAnime, i);
+                                    PSX.levels[Level.Id].edit = true;
                                 }
                                 else
                                 {
-                                    BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_Z.entries[0].data, i);
-                                    PSX.levels[Level.Id].zeroEdit = true;
+                                    if (!Level.zeroFlag)
+                                    {
+                                        BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_X.entries[0].data, i);
+                                        PSX.levels[Level.Id].megaEdit = true;
+                                    }
+                                    else
+                                    {
+                                        BitConverter.GetBytes((ushort)color).CopyTo(PSX.levels[Level.Id].clut_Z.entries[0].data, i);
+                                        PSX.levels[Level.Id].zeroEdit = true;
+                                    }
                                 }
                                 i += 2;
                             }
@@ -1618,6 +1651,13 @@ namespace TeheManX4.Forms
 
                             //Close Window
                             Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive).Close();
+
+                            if (isAnime)
+                            {
+                                MainWindow.window.animeE.DrawClut();
+                                return;
+                            }
+
                             Level.AssignPallete();
                             //Updating the rest of GUI
                             MainWindow.window.clutE.DrawTextures();
@@ -1648,14 +1688,14 @@ namespace TeheManX4.Forms
 
             Button exportSet = new Button()
             {
-                Content = $"Export Clut {Convert.ToString(ClutEditor.clut, 16).ToUpper()} as Txt"
+                Content = $"Export Clut {Convert.ToString(id, 16).ToUpper()} as Txt"
             };
             exportSet.Click += (s, e) =>
             {
                 using(var sfd = new System.Windows.Forms.SaveFileDialog())
                 {
-                    sfd.FileName = $"clut {Convert.ToString(ClutEditor.clut, 16).ToUpper()}.txt";
-                    sfd.Title = $"Select Clut {Convert.ToString(ClutEditor.clut, 16).ToUpper()} save location";
+                    sfd.FileName = $"clut {Convert.ToString(id, 16).ToUpper()}.txt";
+                    sfd.Title = $"Select Clut {Convert.ToString(id, 16).ToUpper()} save location";
 
                     if(sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
@@ -1665,10 +1705,15 @@ namespace TeheManX4.Forms
                         {
                             int color;
 
-                            if(!Level.zeroFlag)
-                                color = Level.To32Rgb(BitConverter.ToUInt16(PSX.levels[Level.Id].clut_X.entries[0].data, ((ClutEditor.clut + (ClutEditor.bgF * 64)) * 16 + i) * 2));
+                            if (isAnime)
+                                color = Level.To32Rgb(BitConverter.ToUInt16(PSX.levels[Level.Id].clutAnime, AnimeEditor.clut * 32 + i * 2));
                             else
-                                color = Level.To32Rgb(BitConverter.ToUInt16(PSX.levels[Level.Id].clut_Z.entries[0].data, ((ClutEditor.clut + (ClutEditor.bgF * 64)) * 16 + i) * 2));
+                            {
+                                if (!Level.zeroFlag)
+                                    color = Level.To32Rgb(BitConverter.ToUInt16(PSX.levels[Level.Id].clut_X.entries[0].data, ((ClutEditor.clut + (ClutEditor.bgF * 64)) * 16 + i) * 2));
+                                else
+                                    color = Level.To32Rgb(BitConverter.ToUInt16(PSX.levels[Level.Id].clut_Z.entries[0].data, ((ClutEditor.clut + (ClutEditor.bgF * 64)) * 16 + i) * 2));
+                            }
 
                             string r = Convert.ToString(color >> 16,16).ToUpper().PadLeft(2, '0');
                             string g = Convert.ToString((color >> 8) & 0xFF, 16).ToUpper().PadLeft(2, '0');
@@ -1687,8 +1732,11 @@ namespace TeheManX4.Forms
                 }
             };
 
-            pannel.Children.Add(cpyBackground);
-            pannel.Children.Add(cpyObject);
+            if (!isAnime)
+            {
+                pannel.Children.Add(cpyBackground);
+                pannel.Children.Add(cpyObject);
+            }
             pannel.Children.Add(importSet);
             pannel.Children.Add(importPAL);
             pannel.Children.Add(exportSet);
