@@ -19,6 +19,7 @@ namespace TeheManX4
         public int size = 0;
         public ARC clut_X;
         public ARC clut_Z;
+        public byte[] clutAnime;
         public bool megaEdit;
         public bool zeroEdit;
         public List<Enemy> enemies = new List<Enemy>();
@@ -356,7 +357,7 @@ namespace TeheManX4
         {
             this.screenData = this.arc.LoadEntry(0);
             this.tileInfo = this.arc.LoadEntry(1);
-
+            this.clutAnime = this.arc.LoadEntry(13);
             int i = this.GetIndex();
             if (i == -1)
                 return;
@@ -390,7 +391,7 @@ namespace TeheManX4
         {
             this.arc.SaveEntry(0, this.screenData);
             this.arc.SaveEntry(1, this.tileInfo);
-
+            this.arc.SaveEntry(13, this.clutAnime);
             if (enemyExpand)
             {
                 byte[] data = CreateEnemyData(this.enemies);
@@ -694,6 +695,8 @@ namespace TeheManX4
                     Settings.levelScreenAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
                 else if(entry.type == 1)
                     Settings.levelTileAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
+                else if(entry.type == 13)
+                    Settings.levelClutAnimeAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
                 else if(entry.type == 0x14)
                     Settings.levelEnemyAddress = (uint)(Settings.levelSize + Settings.levelStartAddress);
                 Settings.levelSize += entry.data.Length;
@@ -733,7 +736,6 @@ namespace TeheManX4
                     if (!enemyExpand)
                     {
                         //Regular Enemies
-                        freeOffset += data.Length;
                         data = CreateEnemyData(PSX.levels[id + offset].enemies);
                         data.CopyTo(PSX.exe, freeOffset);
                         BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + (index + offset) * 4);
