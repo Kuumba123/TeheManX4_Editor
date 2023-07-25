@@ -265,6 +265,9 @@ namespace TeheManX4.Forms
             }
             else
             {
+                int colLocation = Grid.GetColumn(cursor);
+                int rowLocation = Grid.GetRow(cursor);
+
                 if (Grid.GetColumnSpan(cursor) > 1 || Grid.GetRowSpan(cursor) > 1) //Mutli Cord Edit
                 {
                     int tileAmount = PSX.levels[Level.Id].tileInfo.Length / 4;
@@ -272,8 +275,6 @@ namespace TeheManX4.Forms
 
                     byte val = (byte)(cX + cY * 0x10);
 
-                    int colLocation = Grid.GetColumn(cursor);
-                    int rowLocation = Grid.GetRow(cursor);
 
                     if (undos[Level.Id].Count == Const.MaxUndo)
                         undos[Level.Id].RemoveAt(0);
@@ -306,7 +307,7 @@ namespace TeheManX4.Forms
 
                 if (undos[Level.Id].Count == Const.MaxUndo)
                     undos[Level.Id].RemoveAt(0);
-                undos[Level.Id].Add(Undo.CreateTileTextureGroupEditUndo((byte)tileCol, (byte)cX, (byte)cY, 1, 1));
+                undos[Level.Id].Add(Undo.CreateTileTextureGroupEditUndo((byte)tileCol, (byte)colLocation, (byte)rowLocation, 1, 1));
 
                 PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2] = (byte)(cX + (cY * 16));
                 PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3] = (byte)page;
