@@ -32,12 +32,12 @@
                 <Label Foreground="White" FontFamily="Consolas" FontSize="18">Type</Label>
                 <Button Click="MainObject_Click">0</Button>
                 <Button Click="EffectObject_Click">3</Button>
-                <Button>4</Button>
+                <Button Click="ItemObject_Click">4</Button>
                 <Button>5</Button>
                 <Label Foreground="White" FontFamily="Consolas" FontSize="18" x:Name="nameLbl"></Label>
             </StackPanel>
             <!--Selection-->
-            <ScrollViewer x:Name="bar" Focusable="True" Background="Black" Grid.Row="1" Width="375" HorizontalAlignment="Right">
+            <ScrollViewer x:Name="bar" Focusable="True" Background="Black" Grid.Row="1" Width="375" HorizontalAlignment="Right" >
                 <VirtualizingStackPanel>
                     <Image Width="92" Uid="0"  Source="..\Resources\EnemyPhotos\Eregion.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="70" Uid="2"  Source="..\Resources\EnemyPhotos\Item Carrier.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>

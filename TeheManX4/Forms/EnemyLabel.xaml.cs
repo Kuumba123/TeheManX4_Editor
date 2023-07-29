@@ -55,7 +55,7 @@ namespace TeheManX4.Forms
                         this.border.BorderBrush = Brushes.Yellow;
                         break;
                     }
-                case 7: //???
+                case 7: //Foreground Object
                     {
                         this.border.BorderBrush = Brushes.Silver;
                         break;

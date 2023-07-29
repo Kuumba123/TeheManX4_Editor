@@ -933,6 +933,31 @@ namespace TeheManX4
         #region Events
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+#if false
+            byte[] data = File.ReadAllBytes(@"D:\Decompile\MMX6 Decompiled\MMX6 Files\ROCK_X6.DAT");
+            int sector;
+            int fileId = 0;
+            MemoryStream ms = new MemoryStream(data);
+            BinaryReader br = new BinaryReader(ms);
+            while ((sector = br.ReadInt32()) != 0)
+            {
+                int size = br.ReadInt32();
+                long backup = br.BaseStream.Position;
+                int arcSize = BitConverter.ToInt32(data, sector * 0x800 + 4);
+
+                string fileName;
+                if (arcSize != size)
+                    fileName = "ARC_" + Convert.ToString(fileId, 16).ToUpper() + ".BIN";
+                else
+                    fileName = "ARC_" + Convert.ToString(fileId, 16).ToUpper() + ".ARC";
+
+                br.BaseStream.Position = sector * 0x800;
+                File.WriteAllBytes(@"D:\Decompile\MMX6 Decompiled\MMX6 Files\ARC\" + fileName, br.ReadBytes(size));
+                br.BaseStream.Position = backup;
+                fileId++;
+            }
+#endif
+            EnemyEditor.DefineOffsets();
             //Check for Update
             if (settings.dontUpdate) return;
             using (HttpClient client = new HttpClient())
@@ -1211,6 +1236,6 @@ namespace TeheManX4
                 });
             }
         }
-        #endregion Events
+#endregion Events
     }
 }

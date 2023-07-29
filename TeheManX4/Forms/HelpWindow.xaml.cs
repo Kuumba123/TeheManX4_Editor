@@ -58,7 +58,7 @@ namespace TeheManX4.Forms
             //6
             "This is where you can edit the Clut Animes , everything for the most part is pretty simple just keep in mind that " +
             "the if the timer value is less than 0 (its being shown as hex but treat it as signed) it means to be go back " +
-            "that about of frames."
+            "that amount of frames."
         };
         public HelpWindow(int msgId)
         {

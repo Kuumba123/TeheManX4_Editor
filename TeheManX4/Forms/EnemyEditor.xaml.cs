@@ -12,8 +12,10 @@ namespace TeheManX4.Forms
     /// </summary>
     public partial class EnemyEditor : UserControl
     {
-        #region Constants
-        internal const int EffectObjectsScrollOffsets = 6863;
+        #region Fields
+        private static double EffectObjectsScrollOffset = -1;
+        private static double ItemObjectsScrollOffset = -1;
+        private static double MiscObjectsScrollOffsets = -1;
         #endregion Constants
 
         #region Properties
@@ -34,6 +36,38 @@ namespace TeheManX4.Forms
         #endregion Constructors
 
         #region Methods
+        public static void DefineOffsets()
+        {
+            return;
+            double offset = 0;
+            bool effectDefine = false;
+            bool itemDefine = false;
+            bool miscDefine = false;
+            foreach (var item in ((VirtualizingStackPanel)MainWindow.window.enemyE.bar.Content).Children)
+            {
+                if(item.GetType() == typeof(Image))
+                {
+                    Image img = item as Image;
+                    int value = Convert.ToInt32(img.Uid, 16);
+                    byte type = (byte)((value >> 8) & 0xFF);
+
+                    if(type == 3 && !effectDefine)
+                    {
+                        effectDefine = true;
+                        EffectObjectsScrollOffset = offset;
+                    }else if(type == 4 && !itemDefine)
+                    {
+                        itemDefine = true;
+                        ItemObjectsScrollOffset = offset;
+                    }else if(type == 5 && !miscDefine)
+                    {
+                        miscDefine = true;
+                        MiscObjectsScrollOffsets = offset;
+                    }
+                    offset += img.Source.Height * 4;
+                }
+            }
+        }
         public void Draw()
         {
             bmp.Lock();
@@ -397,8 +431,13 @@ namespace TeheManX4.Forms
         }
         private void EffectObject_Click(object sender, RoutedEventArgs e)
         {
-            if (bar.VerticalOffset != EffectObjectsScrollOffsets)
-                bar.ScrollToVerticalOffset(EffectObjectsScrollOffsets); //6865
+            if (bar.VerticalOffset != EffectObjectsScrollOffset && EffectObjectsScrollOffset != -1)
+                bar.ScrollToVerticalOffset(EffectObjectsScrollOffset);
+        }
+        private void ItemObject_Click(object sender, RoutedEventArgs e)
+        {
+            if (bar.VerticalOffset != ItemObjectsScrollOffset && ItemObjectsScrollOffset != -1)
+                bar.ScrollToVerticalOffset(ItemObjectsScrollOffset);
         }
         #endregion Events
     }
