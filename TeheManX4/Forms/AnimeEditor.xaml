@@ -44,7 +44,7 @@
                         <local:NumInt Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="setInt" ValueChanged="setInt_ValueChanged"></local:NumInt>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Label Foreground="White" FontSize="26" Margin="0,0,45,0">Timer:</Label>
+                        <Label Foreground="White" FontSize="26" Margin="0,0,46,0">Timer:</Label>
                         <local:NumInt Minimum="0" Maximum="#FF" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="timerint" ValueChanged="timerint_ValueChanged"></local:NumInt>
                     </StackPanel>
                 </StackPanel>

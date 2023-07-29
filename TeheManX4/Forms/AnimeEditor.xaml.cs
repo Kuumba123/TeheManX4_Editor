@@ -328,6 +328,7 @@ namespace TeheManX4.Forms
                 return;
             }
             Array.Resize(ref PSX.levels[Level.Id].clutAnime, (setCount + 1) * 32);
+            setInt.Maximum++;
             PSX.levels[Level.Id].edit = true;
             DrawClut();
         }
@@ -342,6 +343,7 @@ namespace TeheManX4.Forms
             if(setCount != 1)
             {
                 Array.Resize(ref PSX.levels[Level.Id].clutAnime, (setCount - 1) * 32);
+                setInt.Maximum--;
                 PSX.levels[Level.Id].edit = true;
 
                 if(clut > setCount - 2)
