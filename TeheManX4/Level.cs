@@ -161,6 +161,8 @@ namespace TeheManX4
             }
             for (int i = 1; i < 9; i++) //Boss Introduction
             {
+                if (!File.Exists(path + "/ARC/STD_1_" + i.ToString() + "U.ARC")) continue;
+
                 int o = PSX.levels.Count;
                 PSX.levels.Add(new Level());
                 PSX.levels[o].arc = new ARC(File.ReadAllBytes(path + "/ARC/STD_1_" + i.ToString() + "U.ARC"));
