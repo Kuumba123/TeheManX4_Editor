@@ -55,7 +55,8 @@ namespace TeheManX4
                 //Use Title to save Path
                 win.Title = path;
                 win.MaxWidth = win.Width;
-                win.ResizeMode = System.Windows.ResizeMode.CanMinimize;
+                win.MinWidth = win.Width;
+                win.Height = 500;
                 win.mode = 0xFF;
                 //Read Main Directory
                 rootFolders = GetDirectory(BitConverter.ToUInt32(sector, 0x1A));
@@ -212,16 +213,15 @@ namespace TeheManX4
 
                 offset += sector[offset];
 
-                if (sector[offset] < 0x30 || offset > 0x817)
+                if (sector[offset] == 0 || offset > 0x817)
                 {
-                    if ((sector[0x12] & 0x1) == 1)
+                    if ((sector[0x12] & 0x81) != 0)
                     {
                         break;
                     }
                     //Move to next sector
                     sector = br.ReadBytes(0x930);
-                    offset = sector[0x18] + 0x18;
-                    offset += sector[offset];
+                    offset = 0x18;
                 }
             }
             return l;
