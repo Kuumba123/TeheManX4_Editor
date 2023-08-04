@@ -184,7 +184,7 @@ namespace TeheManX4.Forms
                     int srcY = cord & 0xF0;
 
 
-                    if (BitConverter.ToUInt16(textBoxes[(int)textInt.Value].boxes[(int)boxInt.Value].data, i * 2) != 0x1FF)
+                    if ((BitConverter.ToUInt16(textBoxes[(int)textInt.Value].boxes[(int)boxInt.Value].data, i * 2) & 0x1FF) != 0x1FF)
                     {
                         brush = new ImageBrush(textTexture);
                         brush.Viewbox = new Rect(srcX, srcY, 16, 16);
@@ -470,7 +470,7 @@ namespace TeheManX4.Forms
                 textWindow.grid.Children.Add(scrollChecks[i]);
             }
 
-            Button confirm = new Button() { Content  = "Confirm"};
+            Button confirm = new Button() { Content  = "Confirm", Focusable = true};
             confirm.Click += (s, arg) => //Convert Char to VRAM XY
             {
                 if (uiBoxes[0].Text == "" && uiBoxes[1].Text == "" && uiBoxes[2].Text == "")
@@ -530,6 +530,9 @@ namespace TeheManX4.Forms
                             if ((bool)scrollChecks[i].IsChecked)
                                 flags = 0x10;
                         }
+                        if (uiBoxes[i].Text[c] == ' ')
+                            flags |= 1;
+
                         bw.Write(flags);
                     }
                 }
@@ -546,7 +549,7 @@ namespace TeheManX4.Forms
             };
             Grid.SetRow(confirm, 1);
             textWindow.outGrid.Children.Add(confirm);
-
+            uiBoxes[0].Focus();
             textWindow.ShowDialog();
         }
         private void textTextureImg_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
