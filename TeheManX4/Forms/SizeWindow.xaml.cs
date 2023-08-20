@@ -25,8 +25,15 @@ namespace TeheManX4.Forms
                 MainWindow.extraWindow.Close();
             Title = PSX.levels[Level.Id].arc.filename + " Size Info";
 
+            int player = -1;
+            if (!Level.zeroFlag && Level.playerArcs[0] != null && !MainWindow.settings.ultimate)
+                player = 0;
+            else if (!Level.zeroFlag && Level.playerArcs[2] != null)
+                player = 2;
+            else if (Level.zeroFlag && Level.playerArcs[1] != null)
+                player = 1;
+
             //Setup Labels
-            UpdateSize();
             enemyCountLbl.Content = "Total Enemies: " + PSX.levels[Level.Id].enemies.Count.ToString();
 
             //Setup other Ints
@@ -47,11 +54,96 @@ namespace TeheManX4.Forms
             {
                 if ((e.type >> 0x10) != 0)
                     continue;
-                size += e.data.Length;
+
                 if (e.type == 0)
+                {
+                    size += PSX.levels[Level.Id].screenData.Length * 2;
+                }
+                else if (e.type == 1)
+                {
+                    size += PSX.levels[Level.Id].tileInfo.Length;
+                }
+                else if (e.type == 13)
+                    size += PSX.levels[Level.Id].clutAnime.Length;
+                else
                     size += e.data.Length;
             }
-            cpuSizeLbl.Content = "Size in CPU RAM: " + Convert.ToString(size, 16).ToUpper();
+            cpuSizeLbl.Content = "Size in CPU RAM: " + size.ToString("X");
+
+            int player = -1;
+            //Use Player File to Get Start Address
+            if (!Level.zeroFlag && Level.playerArcs[0] != null && !MainWindow.settings.ultimate)
+                player = 0;
+            else if (!Level.zeroFlag && Level.playerArcs[2] != null)
+                player = 2;
+            else if (Level.zeroFlag && Level.playerArcs[1] != null)
+                player = 1;
+
+            size += 0x1000;
+            if (player != -1)
+            {
+                foreach (var e in Level.playerArcs[player].entries)
+                {
+                    if ((e.type >> 16) != 0)
+                        continue;
+                    size += e.data.Length;
+                }
+            }
+            if(player == -1)
+            {
+                if (arcSizeLbl.Foreground != System.Windows.Media.Brushes.Red)
+                    arcSizeLbl.Foreground = System.Windows.Media.Brushes.Red;
+            }
+            arcSizeLbl.Content = "Size in Arc Buffer: " + size.ToString("X");
+        }
+        private void UpdateSize2()
+        {
+            if (screenInt.Value == null || tileInt.Value == null) return;
+
+            int size = 0;
+            foreach (var e in PSX.levels[Level.Id].arc.entries)
+            {
+                if ((e.type >> 0x10) != 0)
+                    continue;
+
+                if (e.type == 0)
+                    size += (int)screenInt.Value * 0x200 * 2;
+                else if (e.type == 1)
+                {
+                    size += (int)tileInt.Value * 4;
+                }
+                else if (e.type == 13)
+                    size += PSX.levels[Level.Id].clutAnime.Length;
+                else
+                    size += e.data.Length;
+            }
+            cpuSizeLbl.Content = "Size in CPU RAM: " + size.ToString("X");
+
+            int player = -1;
+            //Use Player File to Get Start Address
+            if (!Level.zeroFlag && Level.playerArcs[0] != null && !MainWindow.settings.ultimate)
+                player = 0;
+            else if (!Level.zeroFlag && Level.playerArcs[2] != null)
+                player = 2;
+            else if (Level.zeroFlag && Level.playerArcs[1] != null)
+                player = 1;
+
+            size += 0x1000;
+            if (player != -1)
+            {
+                foreach (var e in Level.playerArcs[player].entries)
+                {
+                    if ((e.type >> 16) != 0)
+                        continue;
+                    size += e.data.Length;
+                }
+            }
+            if (player == -1)
+            {
+                if (arcSizeLbl.Foreground != System.Windows.Media.Brushes.Red)
+                    arcSizeLbl.Foreground = System.Windows.Media.Brushes.Red;
+            }
+            arcSizeLbl.Content = "Size in Arc Buffer: " + size.ToString("X");
         }
         #endregion Methoids
 
@@ -60,12 +152,18 @@ namespace TeheManX4.Forms
         {
             if (!enable) return;
             change = true;
+            UpdateSize2();
+        }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
             UpdateSize();
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Confirm_Click(object sender, RoutedEventArgs e)
         {
             if (change)
             {
+                if (screenInt.Value == null || tileInt.Value == null || widthInt.Value == null || heightInt.Value == null) return;
+
                 Array.Resize(ref PSX.levels[Level.Id].screenData, (int)(screenInt.Value * 0x200));
                 Array.Resize(ref PSX.levels[Level.Id].tileInfo, (int)(tileInt.Value * 4));
 
@@ -92,11 +190,29 @@ namespace TeheManX4.Forms
                 PSX.levels[Level.Id].height = (int)heightInt.Value;
                 PSX.levels[Level.Id].size = sizeNew;
 
+                //Clear Non Existing Tiles
+                int maxTileId = (int)tileInt.Value - 1;
+                for (int s = 0; s < screenInt.Value; s++)
+                {
+                    for (int t = 0; t < 0x100; t++)
+                    {
+                        int index = s * 0x200 + t * 2;
+                        ushort id = (ushort)(BitConverter.ToUInt16(PSX.levels[Level.Id].screenData, index) & 0x3FFF);
+
+                        if(id > maxTileId)
+                        {
+                            PSX.levels[Level.Id].screenData[index] = 0;
+                            PSX.levels[Level.Id].screenData[index + 1] = 0;
+                        }
+                    }
+                }
+
                 PSX.levels[Level.Id].edit = true;
                 PSX.edit = true;
                 Undo.ClearLevelUndos();
                 MainWindow.window.Update();
             }
+            Close();
         }
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
