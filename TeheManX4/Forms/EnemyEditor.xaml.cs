@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace TeheManX4.Forms
 {
@@ -13,9 +15,8 @@ namespace TeheManX4.Forms
     public partial class EnemyEditor : UserControl
     {
         #region Fields
-        private static double EffectObjectsScrollOffset = -1;
-        private static double ItemObjectsScrollOffset = -1;
-        private static double MiscObjectsScrollOffsets = -1;
+        static List<Rectangle> triggerRects = new List<Rectangle>();
+        static List<EnemyLabel> enemyLabels = new List<EnemyLabel>();
         #endregion Constants
 
         #region Properties
@@ -36,38 +37,6 @@ namespace TeheManX4.Forms
         #endregion Constructors
 
         #region Methods
-        public static void DefineOffsets()
-        {
-            return;
-            double offset = 0;
-            bool effectDefine = false;
-            bool itemDefine = false;
-            bool miscDefine = false;
-            foreach (var item in ((VirtualizingStackPanel)MainWindow.window.enemyE.bar.Content).Children)
-            {
-                if(item.GetType() == typeof(Image))
-                {
-                    Image img = item as Image;
-                    int value = Convert.ToInt32(img.Uid, 16);
-                    byte type = (byte)((value >> 8) & 0xFF);
-
-                    if(type == 3 && !effectDefine)
-                    {
-                        effectDefine = true;
-                        EffectObjectsScrollOffset = offset;
-                    }else if(type == 4 && !itemDefine)
-                    {
-                        itemDefine = true;
-                        ItemObjectsScrollOffset = offset;
-                    }else if(type == 5 && !miscDefine)
-                    {
-                        miscDefine = true;
-                        MiscObjectsScrollOffsets = offset;
-                    }
-                    offset += img.Source.Height * 4;
-                }
-            }
-        }
         public void Draw()
         {
             bmp.Lock();
@@ -92,47 +61,82 @@ namespace TeheManX4.Forms
             Draw();
             DrawEnemies();
         }
-        public void DrawEnemies()
+        public void DrawEnemies(bool updateTrigger = true)
         {
             DisableSelect();
-            if (MainWindow.window.enemyE.canvas.Children.Count != 256)
+
+            foreach (var r in enemyLabels)
+                r.Visibility = Visibility.Collapsed;
+
+            int index = PSX.levels[Level.Id].GetIndex();
+            if (index > 25) goto TriggerCheck;
+
+            while (enemyLabels.Count < PSX.levels[Level.Id].enemies.Count) //Add to Canvas
             {
-                while (true)
+                var r = new EnemyLabel();
+                r.PreviewMouseDown += Label_PreviewMouseDown;
+                enemyLabels.Add(r);
+                MainWindow.window.enemyE.canvas.Children.Add(r);
+            }
+
+            for (int i = 0; i < PSX.levels[Level.Id].enemies.Count; i++) //Update Each Enemy
+            {
+                enemyLabels[i].Tag = PSX.levels[Level.Id].enemies[i];
+                enemyLabels[i].text.Content = PSX.levels[Level.Id].enemies[i].id.ToString("X");
+                enemyLabels[i].AssignTypeBorder(PSX.levels[Level.Id].enemies[i].type);
+                Canvas.SetLeft(enemyLabels[i], PSX.levels[Level.Id].enemies[i].x - viewerX - Const.EnemyOffset);
+                Canvas.SetTop(enemyLabels[i], PSX.levels[Level.Id].enemies[i].y - viewerY - Const.EnemyOffset);
+                enemyLabels[i].Visibility = Visibility.Visible;
+            }
+
+        TriggerCheck:
+            if (updateTrigger)
+                UpdateTriggers();
+        }
+        public void UpdateTriggers()
+        {
+            foreach (var r in triggerRects)
+                r.Visibility = Visibility.Collapsed;
+            int index = PSX.levels[Level.Id].GetIndex();
+            if (index > 25) return;
+
+            if (BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(Const.CameraTriggerPointersAddress + index * 4))) != 0)
+            {
+                while (triggerRects.Count < (MainWindow.window.camE.triggerInt.Maximum + 1)) //Add to Canvas
                 {
-                    if (MainWindow.window.enemyE.canvas.Children.Count == 256)
-                        break;
-                    EnemyLabel l = new EnemyLabel();
-                    l.PreviewMouseDown += Label_PreviewMouseDown;
-                    MainWindow.window.enemyE.canvas.Children.Add(l);
+                    Rectangle r = new Rectangle()
+                    {
+                        IsHitTestVisible = false,
+                        StrokeThickness = 2,
+                        Stroke = Brushes.Green,
+                        Fill = new SolidColorBrush(Color.FromArgb(96, 0xAD, 0xD8, 0xE6))
+                    };
+                    triggerRects.Add(r);
+                    MainWindow.window.enemyE.canvas.Children.Add(r);
                 }
-            }
-            foreach (var c in MainWindow.window.enemyE.canvas.Children)
-            {
-                if (c.GetType() != typeof(EnemyLabel))
-                    continue;
-                EnemyLabel l = (EnemyLabel)c;
-                l.Visibility = Visibility.Hidden;
-            }
-            int offset = 0;
-            //Add Each Enemy if ON SCREEN
-            foreach (var e in PSX.levels[Level.Id].enemies)
-            {
-                if (e.x < viewerX || e.x > viewerX + (bmp.Width - 1) || e.y < viewerY || e.y > viewerY + 0x1FF)
-                    continue;
-                if (MainWindow.window.enemyE.canvas.Children[offset].GetType() != typeof(EnemyLabel))
-                    offset++;
 
-                //New Enemy to Add to Viewer
-                var l = new EnemyLabel();
-                ((EnemyLabel)MainWindow.window.enemyE.canvas.Children[offset]).text.Content = Convert.ToString(e.id, 16).ToUpper();
-                ((EnemyLabel)MainWindow.window.enemyE.canvas.Children[offset]).AssignTypeBorder(e.type);
+                for (int i = 0; i < (MainWindow.window.camE.triggerInt.Maximum + 1); i++) //Update Trigger Sizes
+                {
+                    uint address = BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(Const.CameraTriggerPointersAddress + index * 4)));
 
-                Canvas.SetLeft((EnemyLabel)MainWindow.window.enemyE.canvas.Children[offset], e.x - viewerX - Const.EnemyOffset);
-                Canvas.SetTop((EnemyLabel)MainWindow.window.enemyE.canvas.Children[offset], e.y - viewerY - Const.EnemyOffset);
+                    int dataOffset = PSX.CpuToOffset(BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(address + (i * 4)))));
 
-                ((EnemyLabel)MainWindow.window.enemyE.canvas.Children[offset]).Visibility = Visibility.Visible;
-                ((EnemyLabel)MainWindow.window.enemyE.canvas.Children[offset]).Tag = e;
-                offset++;
+                    int rightSide = BitConverter.ToUInt16(PSX.exe, dataOffset);
+                    int leftSide = BitConverter.ToUInt16(PSX.exe, dataOffset + 2);
+                    int bottomSide = BitConverter.ToUInt16(PSX.exe, dataOffset + 4);
+                    int topSide = BitConverter.ToUInt16(PSX.exe, dataOffset + 6);
+
+                    int width = rightSide - leftSide;
+                    int height = bottomSide - topSide;
+
+                    triggerRects[i].Width = width;
+                    triggerRects[i].Height = height;
+
+                    Canvas.SetLeft(triggerRects[i], leftSide - viewerX);
+                    Canvas.SetTop(triggerRects[i], topSide - viewerY);
+
+                    triggerRects[i].Visibility = Visibility.Visible;
+                }
             }
         }
         public void DisableSelect()
@@ -264,6 +268,121 @@ namespace TeheManX4.Forms
                     MessageBox.Show(info);
             }
         }
+        private void canvas_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if ((bool)MainWindow.window.camE.triggerCheck.IsChecked)
+            {
+                point = e.GetPosition(MainWindow.window.enemyE.canvas);
+                down = true;
+                MainWindow.window.enemyE.canvas.CaptureMouse();
+            }
+        }
+        private void canvas_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!down) return;
+
+            if ((bool)MainWindow.window.camE.triggerCheck.IsChecked) //Select Trigger Size
+            {
+                Point mousePos = e.GetPosition(canvas);
+                if (point.X < mousePos.X)
+                {
+                    Canvas.SetLeft(selectRect, point.X);
+                    selectRect.Width = mousePos.X - point.X;
+                }
+                else
+                {
+                    Canvas.SetLeft(selectRect, mousePos.X);
+                    selectRect.Width = point.X - mousePos.X;
+                }
+
+                if (point.Y < mousePos.Y)
+                {
+                    Canvas.SetTop(selectRect, point.Y);
+                    selectRect.Height = mousePos.Y - point.Y;
+                }
+                else
+                {
+                    Canvas.SetTop(selectRect, mousePos.Y);
+                    selectRect.Height = point.Y - mousePos.Y;
+                }
+                selectRect.Visibility = Visibility.Visible;
+                return;
+            }
+
+            //Move Enemy
+            if (obj == null) return;
+            var pos = e.GetPosition(sender as IInputElement);
+            double x = pos.X - point.X;
+            double y = pos.Y - point.Y;
+
+            //Border Checks
+            if (x < 0 - Const.EnemyOffset)
+                x = 0 - Const.EnemyOffset;
+            if (y < 0 - Const.EnemyOffset)
+                y = 0 - Const.EnemyOffset;
+
+
+            Canvas.SetLeft(obj, x);
+            Canvas.SetTop(obj, y);
+            UpdateEnemyCordLabel((int)x, (int)y);
+            var en = (Enemy)((EnemyLabel)obj).Tag;
+            en.x = (short)((short)(viewerX + x) + Const.EnemyOffset);
+            en.y = (short)((short)(viewerY + y) + Const.EnemyOffset);
+            if (Level.enemyExpand)
+                PSX.levels[Level.Id].edit = true;
+            else
+                PSX.edit = true;
+        }
+        private void canvas_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Right)
+                return;
+            down = false;
+            if ((bool)MainWindow.window.camE.triggerCheck.IsChecked)
+            {
+                selectRect.Visibility = Visibility.Collapsed;
+                int index = PSX.levels[Level.Id].GetIndex();
+                if (index > 25) goto End;
+
+                uint address = BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(Const.CameraTriggerPointersAddress + index * 4)));
+                if (address == 0) goto End;
+
+                int leftSide = ((int)(Canvas.GetLeft(selectRect) + viewerX));
+                int rightSide = ((int)(Canvas.GetLeft(selectRect) + selectRect.Width + viewerX));
+                int topSide = (int)(Canvas.GetTop(selectRect) + viewerY);
+                int bottomSide = (int)(Canvas.GetTop(selectRect) + selectRect.Height + viewerY);
+
+                if(leftSide < 0)
+                    leftSide = 0;
+                if (rightSide > 0xFFFF)
+                    rightSide = 0xFFFF;
+                if (topSide < 0)
+                    topSide = 0;
+                if (bottomSide > 0xFFFF)
+                    bottomSide = 0xFFFF;
+
+                int dataOffset = PSX.CpuToOffset(BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(address + ((int)MainWindow.window.camE.triggerInt.Value * 4)))));
+
+                BitConverter.GetBytes((ushort)rightSide).CopyTo(PSX.exe, dataOffset);
+                MainWindow.window.camE.rightInt.Value = rightSide;
+                
+                BitConverter.GetBytes((ushort)leftSide).CopyTo(PSX.exe, dataOffset + 2);
+                MainWindow.window.camE.leftInt.Value = leftSide;
+
+                BitConverter.GetBytes((ushort)bottomSide).CopyTo(PSX.exe, dataOffset + 4);
+                MainWindow.window.camE.bottomInt.Value = bottomSide;
+
+                BitConverter.GetBytes((ushort)topSide).CopyTo(PSX.exe, dataOffset + 6);
+                MainWindow.window.camE.topInt.Value = topSide;
+
+                PSX.edit = true;
+                UpdateTriggers();
+            }
+            else
+                obj = null;
+        End:
+            canvas.ReleaseMouseCapture();
+        }
         private void idInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (control.Tag == null || e.NewValue == null || e.OldValue == null)
@@ -272,7 +391,6 @@ namespace TeheManX4.Forms
             ((EnemyLabel)control.Tag).text.Content = Convert.ToString(((Enemy)((EnemyLabel)control.Tag).Tag).id, 16).ToUpper();
             UpdateEnemyName(((Enemy)((EnemyLabel)control.Tag).Tag).type, ((Enemy)((EnemyLabel)control.Tag).Tag).id);
         }
-
         private void xInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (control.Tag == null || e.NewValue == null || e.OldValue == null)
@@ -294,7 +412,6 @@ namespace TeheManX4.Forms
             ((Enemy)((EnemyLabel)control.Tag).Tag).var = (byte)((int)e.NewValue & 0xFF);
 
         }
-
         private void typeInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (control.Tag == null || e.NewValue == null || e.OldValue == null)
@@ -346,41 +463,6 @@ namespace TeheManX4.Forms
             HelpWindow h = new HelpWindow(3);
             h.ShowDialog();
         }
-        private void canvas_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            if (obj == null || !down)
-                return;
-            var pos = e.GetPosition(sender as IInputElement);
-            double x = pos.X - point.X;
-            double y = pos.Y - point.Y;
-
-            //Border Checks
-            if (x < 0 - Const.EnemyOffset)
-                x = 0 - Const.EnemyOffset;
-            if (y < 0 - Const.EnemyOffset)
-                y = 0 - Const.EnemyOffset;
-
-
-            Canvas.SetLeft(obj, x);
-            Canvas.SetTop(obj, y);
-            UpdateEnemyCordLabel((int)x, (int)y);
-            var en = (Enemy)((EnemyLabel)obj).Tag;
-            en.x = (short)((short)(viewerX + x) + Const.EnemyOffset);
-            en.y = (short)((short)(viewerY + y) + Const.EnemyOffset);
-            if (Level.enemyExpand)
-                PSX.levels[Level.Id].edit = true;
-            else
-                PSX.edit = true;
-        }
-
-        private void canvas_PreviewMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Right)
-                return;
-            obj = null;
-            down = false;
-            canvas.ReleaseMouseCapture();
-        }
         private void EnemyImage_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
@@ -426,18 +508,18 @@ namespace TeheManX4.Forms
         }
         private void MainObject_Click(object sender, RoutedEventArgs e)
         {
-            if (bar.VerticalOffset != 0)
-                bar.ScrollToTop(); //6865
+            //if (bar.VerticalOffset != 0)
+            //    bar.ScrollToTop(); //6865
         }
         private void EffectObject_Click(object sender, RoutedEventArgs e)
         {
-            if (bar.VerticalOffset != EffectObjectsScrollOffset && EffectObjectsScrollOffset != -1)
-                bar.ScrollToVerticalOffset(EffectObjectsScrollOffset);
+            //if (bar.VerticalOffset != EffectObjectsScrollOffset && EffectObjectsScrollOffset != -1)
+            //    bar.ScrollToVerticalOffset(EffectObjectsScrollOffset);
         }
         private void ItemObject_Click(object sender, RoutedEventArgs e)
         {
-            if (bar.VerticalOffset != ItemObjectsScrollOffset && ItemObjectsScrollOffset != -1)
-                bar.ScrollToVerticalOffset(ItemObjectsScrollOffset);
+            //if (bar.VerticalOffset != ItemObjectsScrollOffset && ItemObjectsScrollOffset != -1)
+            //    bar.ScrollToVerticalOffset(ItemObjectsScrollOffset);
         }
         #endregion Events
     }

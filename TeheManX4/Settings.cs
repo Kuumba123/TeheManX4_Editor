@@ -45,10 +45,16 @@ namespace TeheManX4
         public string webPort; //Redux
         public string comPort; //NOPS
         public bool useNops;
+        public int referanceWidth;
         public bool dontUpdate;
         public bool ultimate;
         public bool defaultZero;
         public bool saveOnReload;
+        public bool dontSaveLayout;
+        public bool autoScreen; //open layout viewer for screens automatically
+        public bool autoExtra;  //open extra screen tile flags viewer
+        public bool autoFiles;  //open files viewer
+        public bool dontResetId;
         #endregion Properties
 
         #region Methods

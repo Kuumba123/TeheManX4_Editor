@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TeheManX4.Forms"
         mc:Ignorable="d"
-        Title="Help" Height="300" Width="300">
+        Title="Help" Height="300" Width="300" WindowStartupLocation="CenterScreen">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <TextBox x:Name="box" FontSize="16" IsReadOnly="True" Foreground="White" Background="Black" TextWrapping="Wrap"></TextBox>

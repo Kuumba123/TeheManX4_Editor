@@ -34,10 +34,11 @@ namespace TeheManX4
         public static int BG = 0;
         public static bool showCollision;
         public static bool enemyExpand;
+        public static bool textureSupport; //8bpp Textures
         public static WriteableBitmap collisionBmp;
         public static bool zeroFlag = false;
-        public static WriteableBitmap[] bmp = new WriteableBitmap[16];
-        public static BitmapPalette[] palette = new BitmapPalette[0x80];
+        public static WriteableBitmap[] bmp = new WriteableBitmap[16 + 4];
+        public static BitmapPalette[] palette = new BitmapPalette[512];
         public static ARC[] playerArcs = new ARC[3];
         #endregion Fields
 
@@ -45,10 +46,39 @@ namespace TeheManX4
         public static void LoadLevels(string path) //And Player Files
         {
             PSX.levels.Clear();
+
             if (PSX.exe[PSX.CpuToOffset(0x80028db4)] == 0x80)
                 enemyExpand = true;
             else
                 enemyExpand = false;
+
+            /*8bpp Texture Support*/
+            Visibility visibility;
+            int max;
+            string Texture8bpp = "TEXTURE_8BPP";
+            if (System.Text.Encoding.ASCII.GetString(PSX.exe, PSX.CpuToOffset(0x800260e4), Texture8bpp.Length) == Texture8bpp)
+            {
+                visibility = Visibility.Visible;
+                max = 0xB;
+                textureSupport = true;
+            }
+            else
+            {
+                visibility = Visibility.Collapsed;
+                max = 7;
+                textureSupport = false;
+            }
+            MainWindow.window.screenE.pageInt.Maximum = max;
+            MainWindow.window.x16E.pageInt.Maximum = max;
+            Forms.ClutEditor.maxPage = max;
+
+            for (int i = 0; i < 4; i++)
+            {
+                ((System.Windows.Controls.Button)MainWindow.window.x16E.tPagePannel.Children[9 + i]).Visibility = visibility;
+                ((System.Windows.Controls.Button)MainWindow.window.clutE.pagePannel.Children[9 + i]).Visibility = visibility;
+            }
+
+            /*Actually Loading Levels*/
             for (int i = 0; i < 0xD; i++)
             {
                 //1ST HALF
@@ -266,63 +296,111 @@ namespace TeheManX4
         {
             id &= 0x3FFF;
             byte* buffer = (byte*)dest;
+            int val = BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4);
+            int page = (val >> 24) & 0xF;
 
-            if (id == 0) // 0 = Empty Tile
+            if (page > 0xB || id == 0) // 0 = Empty Tile
             {
+                int index = x * 3 + y * stride;
+                stride -= 48;
                 for (int Y = 0; Y < 16; Y++)
                 {
                     for (int X = 0; X < 16; X++)
                     {
-                        int index = ((x + X) * 3) + (y + Y) * stride;
-                        buffer[index] = 0;
-                        buffer[index + 1] = 0;
+                        *(ushort*)(buffer + index) = 0;
                         buffer[index + 2] = 0;
+                        index += 3;
                     }
+                    index += stride;
                 }
                 return;
             }
 
-            // Get Tile Info
-            int cordX = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 16) & 0xF;
-            int cordY = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 20) & 0xF;
-            int page = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 24) & 0x7;
-            int clut = (BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) >> 8) & 0x3F;
-            int collisionType = BitConverter.ToInt32(PSX.levels[Id].tileInfo, id * 4) & 0x3F;
+            // Get other Tile Info
+            int cordX = (val >> 16) & 0xF;
+            int cordY = (val >> 20) & 0xF;
+            int clut = (val >> 8) & 0xFF;
+            int collisionType = val & 0x3F;
 
-            IntPtr bmpBackBuffer = bmp[page + 8].BackBuffer;
-            int bmpStride = bmp[page].BackBufferStride;
+            IntPtr bmpBackBuffer;
+            int bmpStride;
 
-            if (showCollision)
+            if(showCollision) //Collision
+            {
+                bmpStride = 128;
                 bmpBackBuffer = collisionBmp.BackBuffer;
 
-            for (int row = 0; row < 16; row++)
-            {
-                int destIndex = (x * 3) + (y + row) * stride;
-                int sourceIndex = (cordX * 8) + ((cordY * 16 + row) * bmpStride);
-
-                if(showCollision)
-                    sourceIndex = ((collisionType & 0xF) * 8) + (((collisionType >> 4) * 16 + row) * bmpStride);
-
-                for (int col = 0; col < 16; col++)
+                for (int row = 0; row < 16; row++)
                 {
-                    byte pixel = *(byte*)(bmpBackBuffer + sourceIndex + (col / 2));
-
-                    if((col & 1) == 1)
-                        pixel &= 0xF;
-                    else
-                        pixel >>= 4;
-
-                    if (showCollision)
+                    int destIndex = (x * 3) + (y + row) * stride;
+                    int sourceIndex = ((collisionType & 0xF) * 8) + (((collisionType >> 4) * 16 + row) * bmpStride);
+                    for (int col = 0; col < 16; col++)
                     {
-                        buffer[destIndex++] = collisionBmp.Palette.Colors[pixel].R;
-                        buffer[destIndex++] = collisionBmp.Palette.Colors[pixel].G;
-                        buffer[destIndex++] = collisionBmp.Palette.Colors[pixel].B;
+                        byte pixel;
+
+                        pixel = *(byte*)(bmpBackBuffer + sourceIndex + (col / 2));
+                        if ((col & 1) == 1)
+                            pixel &= 0xF;
+                        else
+                            pixel >>= 4;
+
+                        buffer[destIndex] = collisionBmp.Palette.Colors[pixel].R;
+                        buffer[destIndex + 1] = collisionBmp.Palette.Colors[pixel].G;
+                        buffer[destIndex + 2] = collisionBmp.Palette.Colors[pixel].B;
+                        destIndex += 3;
                     }
-                    else
+                }
+            }
+            else if(page < 8) //4bpp
+            {
+                bmpBackBuffer = bmp[page + 8].BackBuffer;
+                bmpStride = 128;
+
+                for (int row = 0; row < 16; row++)
+                {
+                    int destIndex = (x * 3) + (y + row) * stride;
+                    int sourceIndex = (cordX * 8) + ((cordY * 16 + row) * bmpStride);
+
+                    for (int col = 0; col < 16; col++)
                     {
-                        buffer[destIndex++] = palette[clut + 64].Colors[pixel].R;
-                        buffer[destIndex++] = palette[clut + 64].Colors[pixel].G;
-                        buffer[destIndex++] = palette[clut + 64].Colors[pixel].B;
+                        byte pixel;
+
+                        pixel = *(byte*)(bmpBackBuffer + sourceIndex + (col / 2));
+                        if ((col & 1) == 1)
+                            pixel &= 0xF;
+                        else
+                            pixel >>= 4;
+
+                        buffer[destIndex] = palette[clut + 64].Colors[pixel].R;
+                        buffer[destIndex + 1] = palette[clut + 64].Colors[pixel].G;
+                        buffer[destIndex + 2] = palette[clut + 64].Colors[pixel].B;
+                        destIndex += 3;
+                    }
+                }
+            }
+            else //8bpp
+            {
+                bmpBackBuffer = bmp[(page & 3) + 16].BackBuffer;
+                bmpStride = 256;
+
+                for (int row = 0; row < 16; row++)
+                {
+                    int destIndex = (x * 3) + (y + row) * stride;
+                    int sourceIndex = (cordX * 16) + ((cordY * 16 + row) * bmpStride);
+
+                    for (int col = 0; col < 16; col++)
+                    {
+                        byte pixel;
+
+                        pixel = *(byte*)(bmpBackBuffer + sourceIndex + col);
+                        int indexClut = clut + (pixel >> 4);
+                        pixel &= 0xF;
+                        if ((indexClut * 16 + pixel) > 8191) continue;
+
+                        buffer[destIndex] = palette[indexClut + 64].Colors[pixel].R;
+                        buffer[destIndex + 1] = palette[indexClut + 64].Colors[pixel].G;
+                        buffer[destIndex + 2] = palette[indexClut + 64].Colors[pixel].B;
+                        destIndex += 3;
                     }
                 }
             }
@@ -401,13 +479,35 @@ namespace TeheManX4
                 this.arc.SaveEntry(0x14, data);
             }
         }
-        public void LoadTextures(bool onlyObj = false)
+        public unsafe void LoadTextures(bool onlyObj = false)
         {
             if (!onlyObj)
             {
                 //BG Textures
                 Array.Clear(pixels, 0, pixels.Length);
                 this.arc.LoadEntry(0x010000, pixels);
+
+                //8bpp
+                for (int i = 0; i < 4; i++)
+                {
+                    bmp[16 + i].Lock();
+                    byte* buffer = (byte*)bmp[16 + i].BackBuffer;
+                    for (int r = 0; r < 256; r++)
+                    {
+                        for (int c = 0; c < 256; c++)
+                        {
+                            if(c < 128)
+                                buffer[r * 256 + c] = pixels[i * 0x10000 + r * 128 + c];
+                            else
+                                buffer[r * 256 + c] = pixels[i * 0x10000 + 0x8000 + r * 128 + c - 128];
+                        }
+                    }
+
+                    bmp[16 + i].AddDirtyRect(new Int32Rect(0, 0, 256, 256));
+                    bmp[16 + i].Unlock();
+                }
+
+                //4bpp
                 ConvertBmp(pixels);
                 for (int i = 0; i < 8; i++)
                     bmp[i + 8].WritePixels(new Int32Rect(0, 0, 256, 256), pixels, 128, i * 0x8000);
@@ -616,18 +716,22 @@ namespace TeheManX4
             {
                 //Check if there is a valid number of enemies
                 int enemiesCount = 0;
+                
+                int offset = 1;
+                if (PSX.levels[id].arc.filename == "ST0B_0X.ARC")
+                    offset = 2;
 
                 if (enemyExpand)
                 {
                     if (levelId != 9 && levelId != 0xA)
-                        enemiesCount = PSX.levels[id].startEnemies.Count + PSX.levels[id + 1].startEnemies.Count;
+                        enemiesCount = PSX.levels[id].startEnemies.Count + PSX.levels[id + offset].startEnemies.Count;
                     else
                         enemiesCount = PSX.levels[id].startEnemies.Count;
                 }
                 else
                 {
                     if (levelId != 9 && levelId != 0xA)
-                        enemiesCount = PSX.levels[id].enemies.Count + PSX.levels[id].startEnemies.Count + PSX.levels[id + 1].enemies.Count + PSX.levels[id + 1].startEnemies.Count;
+                        enemiesCount = PSX.levels[id].enemies.Count + PSX.levels[id].startEnemies.Count + PSX.levels[id + offset].enemies.Count + PSX.levels[id + offset].startEnemies.Count;
                     else
                         enemiesCount = PSX.levels[id].enemies.Count + PSX.levels[id].startEnemies.Count;
                 }
@@ -740,13 +844,13 @@ namespace TeheManX4
                         //Regular Enemies
                         data = CreateEnemyData(PSX.levels[id + offset].enemies);
                         data.CopyTo(PSX.exe, freeOffset);
-                        BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + (index + offset) * 4);
+                        BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.EnemyDataPointersOffset + (index + 1) * 4);
                         freeOffset += data.Length;
                     }
                     //Start Enemies
                     data = CreateEnemyData(PSX.levels[id + offset].startEnemies);
                     data.CopyTo(PSX.exe, freeOffset);
-                    BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.StartEnemyDataPointersOffset + (index + offset) * 4);
+                    BitConverter.GetBytes(PSX.OffsetToCpu(freeOffset)).CopyTo(PSX.exe, Const.StartEnemyDataPointersOffset + (index + 1) * 4);
                 }
             }
             PSX.levels[id].ApplyLevelsToARC();
@@ -812,7 +916,19 @@ namespace TeheManX4
                 for (int i = 0; i < palette.Length; i++)
                     palette[i] = Const.GreyScalePallete;
             }
-            for (int b = 0; b < 0x80; b++)
+            int length;
+            if (!zeroFlag && PSX.levels[Id].clut_X != null)
+                length = PSX.levels[Id].clut_X.entries[0].data.Length / 32;
+            else if (zeroFlag && PSX.levels[Id].clut_Z != null)
+                length = PSX.levels[Id].clut_Z.entries[0].data.Length / 32;
+            else
+                length = 0x80;
+            if (length > palette.Length)
+                length = palette.Length;
+
+
+
+            for (int b = 0; b < length; b++)
             {
                 List<Color> l = new List<Color>();
                 for (int i = 0; i < 16; i++)
@@ -835,8 +951,16 @@ namespace TeheManX4
         End:
             for (int a = 0; a < bmp.Length; a++)
             {
-                if (bmp[a] == null)
-                    bmp[a] = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Indexed4, Const.GreyScalePallete);
+                if(a < 16)
+                {
+                    if (bmp[a] == null)
+                        bmp[a] = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Indexed4, Const.GreyScalePallete);
+                }
+                else
+                {
+                    if (bmp[a] == null)
+                        bmp[a] = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Indexed8, Const.GreyScalePallete);
+                }
             }
         }
         public static void AssignPallete(int clut)
@@ -890,11 +1014,133 @@ namespace TeheManX4
                 lc++;
             }
         }
-        public static void DecompressTexture(byte[] src, byte[] dest, int start)
+        public static string CreateTilesetString(int baseX,int  baseY,int screenX,int screenY,int cols,int rows,byte layer,bool includeStruct,bool includeTable,string baseName,bool includeInfo)
+        {
+            System.Text.StringBuilder writter = new System.Text.StringBuilder();
+            if (includeStruct)
+                writter.AppendLine(Const.tileSetStruct);
+
+            byte settings;
+            if(cols > rows)
+            {
+                settings = (byte)((cols << 1) + 1);
+                if (includeTable)
+                {
+                    writter.AppendLine($"/*{baseName} Tile Tables*/");
+                    for (int y = 0; y < rows; y++)
+                    {
+                        writter.AppendLine("ushort " + baseName + "_tileTable" + y.ToString("X") + "[] = {");
+                        for (int x = 0; x < cols; x++)
+                        {
+                            ushort id = BitConverter.ToUInt16(PSX.levels[Id].screenData, MainWindow.window.screenE.screenId * 0x200 + ((x + screenX) * 2) + (y + screenY) * 32);
+
+                            if (x == (cols - 1))
+                                writter.AppendLine("\t0x" + id.ToString("X"));
+                            else
+                                writter.AppendLine("\t0x" + id.ToString("X") + ",");
+                        }
+                        writter.AppendLine("};");
+                    }
+                    writter.AppendLine("\n\n");
+                }
+                if (includeInfo)
+                {
+                    writter.AppendLine($"/*{baseName} Tilesets*/");
+                    for (int y = 0; y < rows; y++)
+                    {
+                        ushort destY = (ushort)(baseY + y * 0x10);
+                        string boolStr;
+                        if (y == (rows - 1))
+                            boolStr = ",\n\tfalse";
+                        else
+                            boolStr = ",\n\ttrue";
+
+                        writter.AppendLine($"tilesetStruct {baseName}_tileset" + y.ToString("X") + " = {");
+                        writter.AppendLine("\t" + layer.ToString() +
+                                            ",\n\t0x" + settings.ToString("X") +
+                                            ",\n\t0x" + baseX.ToString("X") +
+                                            ",\n\t0x" + destY.ToString("X") +
+                                            ",\n\t0" +
+                                            ",\n\t&" + baseName + "_tileTable" + y.ToString("X") +
+                                            boolStr +
+                                            "\n};");
+                    }
+                }
+            }
+            else
+            {
+                settings = (byte)(rows << 1); //Increament Y
+                if (includeTable)
+                {
+                    writter.AppendLine($"/*{baseName} Tile Tables*/");
+                    for (int x = 0; x < cols; x++)
+                    {
+                        writter.AppendLine($"ushort {baseName}_tileTable" + x.ToString("X") + "[] = {");
+                        for (int y = 0; y < rows; y++)
+                        {
+                            ushort id = BitConverter.ToUInt16(PSX.levels[Id].screenData, MainWindow.window.screenE.screenId * 0x200 + ((x + screenX) * 2) + (y + screenY) * 32);
+
+                            if (y == (rows - 1))
+                                writter.AppendLine("\t0x" + id.ToString("X"));
+                            else
+                                writter.AppendLine("\t0x" + id.ToString("X") + ",");
+                        }
+                        writter.AppendLine("};");
+                    }
+                    writter.AppendLine("\n\n");
+                }
+                if (includeInfo)
+                {
+                    writter.AppendLine($"/*{baseName} Tilesets*/");
+                    for (int x = 0; x < cols; x++)
+                    {
+                        ushort destX = (ushort)(baseX + x * 0x10);
+                        string boolStr;
+                        if (x == (cols - 1))
+                            boolStr = ",\n\tfalse";
+                        else
+                            boolStr = ",\n\ttrue";
+
+                        writter.AppendLine($"tilesetStruct {baseName}_tileset" + x.ToString("X") + " = {");
+                        writter.AppendLine("\t" + layer.ToString() +
+                                            ",\n\t0x" + settings.ToString("X") +
+                                            ",\n\t0x" + destX.ToString("X") +
+                                            ",\n\t0x" + baseY.ToString("X") +
+                                            ",\n\t0" +
+                                            ",\n\t&" + baseName + "_tileTable" + x.ToString("X") +
+                                            boolStr +
+                                            "\n};");
+                    }
+                }
+            }
+            return writter.ToString();
+        }
+        public static void ClearInvalidTiles()
+        {
+            //Clear Non Existing Tiles
+            int maxTileId = PSX.levels[Id].tileInfo.Length / 4;
+            maxTileId--;
+            for (int s = 0; s < PSX.levels[Id].screenData.Length / 0x200; s++)
+            {
+                for (int t = 0; t < 0x100; t++)
+                {
+                    int index = s * 0x200 + t * 2;
+                    ushort id = (ushort)(BitConverter.ToUInt16(PSX.levels[Id].screenData, index) & 0x3FFF);
+
+                    if (id > maxTileId)
+                    {
+                        PSX.levels[Id].screenData[index] = 0;
+                        PSX.levels[Id].screenData[index + 1] = 0;
+                    }
+                }
+            }
+        }
+        public static void DecompressTexture(byte[] src, byte[] dest, int start = 0)
         {
             int offset = start;
             int destOffset = 0;
-        Start:
+
+        Start:  //Get New CONTROL Byte
             ushort crtl = BitConverter.ToUInt16(src, offset);
             uint baseCrtl = 0x8000;
             int loopC = 0x10;
@@ -919,8 +1165,8 @@ namespace TeheManX4
                     }
                     else
                     {
-                        data >>= 0xB;
-                        data2 &= 0x7FF;
+                        data >>= 0xB;   //Length
+                        data2 &= 0x7FF; //Copy Offset
                     }
                     if ((data | data2) == 0) //End
                         return;

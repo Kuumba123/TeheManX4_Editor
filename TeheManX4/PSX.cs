@@ -51,6 +51,7 @@ namespace TeheManX4
 
                 //Make WINDOW + CONTROLS
                 ListWindow win = new ListWindow();
+                win.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
 
                 //Use Title to save Path
                 win.Title = path;

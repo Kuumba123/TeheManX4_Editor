@@ -12,6 +12,7 @@ namespace TeheManX4.Forms
         #region Properties
         bool enable;
         bool change;
+        bool clutChange;
         #endregion Properties
 
         #region Constructors
@@ -25,16 +26,9 @@ namespace TeheManX4.Forms
                 MainWindow.extraWindow.Close();
             Title = PSX.levels[Level.Id].arc.filename + " Size Info";
 
-            int player = -1;
-            if (!Level.zeroFlag && Level.playerArcs[0] != null && !MainWindow.settings.ultimate)
-                player = 0;
-            else if (!Level.zeroFlag && Level.playerArcs[2] != null)
-                player = 2;
-            else if (Level.zeroFlag && Level.playerArcs[1] != null)
-                player = 1;
-
             //Setup Labels
-            enemyCountLbl.Content = "Total Enemies: " + PSX.levels[Level.Id].enemies.Count.ToString();
+            if (PSX.levels[Level.Id].GetIndex() < 26)
+                enemyCountLbl.Content = "Total Enemies: " + PSX.levels[Level.Id].enemies.Count.ToString();
 
             //Setup other Ints
             screenInt.Value = PSX.levels[Level.Id].screenData.Length / 0x200;
@@ -42,6 +36,16 @@ namespace TeheManX4.Forms
             widthInt.Value = PSX.levels[Level.Id].width;
             heightInt.Value = PSX.levels[Level.Id].height;
 
+            if (!Level.zeroFlag && PSX.levels[Level.Id].clut_X != null)
+                clutInt.Value = PSX.levels[Level.Id].clut_X.entries[0].data.Length / 32;
+            else if (Level.zeroFlag && PSX.levels[Level.Id].clut_Z != null)
+                clutInt.Value = PSX.levels[Level.Id].clut_Z.entries[0].data.Length / 32;
+
+            if (!Level.textureSupport)
+            {
+                clutInt.Visibility = Visibility.Collapsed;
+                setLbl.Visibility = Visibility.Collapsed;
+            }
             enable = true;
         }
         #endregion Constructors
@@ -68,6 +72,12 @@ namespace TeheManX4.Forms
                 else
                     size += e.data.Length;
             }
+
+            if (!Level.zeroFlag && PSX.levels[Level.Id].clut_X != null)
+                size += PSX.levels[Level.Id].clut_X.entries[0].data.Length;
+            else if (Level.zeroFlag && PSX.levels[Level.Id].clut_Z != null)
+                size += PSX.levels[Level.Id].clut_Z.entries[0].data.Length;
+
             cpuSizeLbl.Content = "Size in CPU RAM: " + size.ToString("X");
 
             int player = -1;
@@ -79,7 +89,6 @@ namespace TeheManX4.Forms
             else if (Level.zeroFlag && Level.playerArcs[1] != null)
                 player = 1;
 
-            size += 0x1000;
             if (player != -1)
             {
                 foreach (var e in Level.playerArcs[player].entries)
@@ -99,6 +108,7 @@ namespace TeheManX4.Forms
         private void UpdateSize2()
         {
             if (screenInt.Value == null || tileInt.Value == null) return;
+            if (clutInt.Value == null && clutInt.Visibility != Visibility.Visible) return;
 
             int size = 0;
             foreach (var e in PSX.levels[Level.Id].arc.entries)
@@ -117,6 +127,10 @@ namespace TeheManX4.Forms
                 else
                     size += e.data.Length;
             }
+
+            if(clutInt.Value != null)
+                size += (int)clutInt.Value * 32;
+
             cpuSizeLbl.Content = "Size in CPU RAM: " + size.ToString("X");
 
             int player = -1;
@@ -128,7 +142,7 @@ namespace TeheManX4.Forms
             else if (Level.zeroFlag && Level.playerArcs[1] != null)
                 player = 1;
 
-            size += 0x1000;
+
             if (player != -1)
             {
                 foreach (var e in Level.playerArcs[player].entries)
@@ -152,6 +166,12 @@ namespace TeheManX4.Forms
         {
             if (!enable) return;
             change = true;
+            UpdateSize2();
+        }
+        private void ClutInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (!enable) return;
+            clutChange = true;
             UpdateSize2();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -190,28 +210,27 @@ namespace TeheManX4.Forms
                 PSX.levels[Level.Id].height = (int)heightInt.Value;
                 PSX.levels[Level.Id].size = sizeNew;
 
-                //Clear Non Existing Tiles
-                int maxTileId = (int)tileInt.Value - 1;
-                for (int s = 0; s < screenInt.Value; s++)
-                {
-                    for (int t = 0; t < 0x100; t++)
-                    {
-                        int index = s * 0x200 + t * 2;
-                        ushort id = (ushort)(BitConverter.ToUInt16(PSX.levels[Level.Id].screenData, index) & 0x3FFF);
-
-                        if(id > maxTileId)
-                        {
-                            PSX.levels[Level.Id].screenData[index] = 0;
-                            PSX.levels[Level.Id].screenData[index + 1] = 0;
-                        }
-                    }
-                }
+                Level.ClearInvalidTiles();
 
                 PSX.levels[Level.Id].edit = true;
                 PSX.edit = true;
                 Undo.ClearLevelUndos();
-                MainWindow.window.Update();
             }
+            if (clutChange && clutInt.Value != null)
+            {
+                ClutEditor.clut = 0;
+                if (PSX.levels[Level.Id].clut_X != null)
+                    Array.Resize(ref PSX.levels[Level.Id].clut_X.entries[0].data, (int)clutInt.Value * 32);
+                if (PSX.levels[Level.Id].clut_Z != null)
+                    Array.Resize(ref PSX.levels[Level.Id].clut_Z.entries[0].data, (int)clutInt.Value * 32);
+                PSX.levels[Level.Id].megaEdit = true;
+                PSX.levels[Level.Id].zeroEdit = true;
+            }
+
+            if(clutChange || change)
+                MainWindow.window.Update();
+
+            //Completly Done
             Close();
         }
         private void HelpButton_Click(object sender, RoutedEventArgs e)

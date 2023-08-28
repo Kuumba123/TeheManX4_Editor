@@ -22,7 +22,7 @@ namespace TeheManX4
             if (data.Length < 0x800)
                 return;
             int fileSize = BitConverter.ToInt32(data, 4);
-            if (fileSize == BitConverter.ToInt32(BitConverter.GetBytes(data.Length).Reverse().ToArray(), 0))
+            if (fileSize == BitConverter.ToInt32(BitConverter.GetBytes(data.Length).Reverse().ToArray(), 0) && data[3] != 0)
             {
                 fileSize = BitConverter.ToInt32(BitConverter.GetBytes(fileSize).Reverse().ToArray(), 0);
                 isMSB = true;

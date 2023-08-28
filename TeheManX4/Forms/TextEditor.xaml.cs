@@ -99,6 +99,11 @@ namespace TeheManX4.Forms
         #endregion CONSTANTS
 
         #region Fields
+        public static double autoTextLeft = double.NaN;
+        public static double autoTextTop = double.NaN;
+        #endregion Fields
+
+        #region Properties
         bool enable;
         Rectangle texRectangle = null;
         WriteableBitmap textTexture;
@@ -106,7 +111,7 @@ namespace TeheManX4.Forms
         RenderTargetBitmap target = new RenderTargetBitmap(246, 70, 96, 96, PixelFormats.Default);
         DrawingVisual drawingVisual = new DrawingVisual();
         List<TextEntry> textBoxes = new List<TextEntry>();
-        #endregion Fields
+        #endregion Properties
 
         #region Constructors
         public TextEditor(ARC arc)
@@ -142,8 +147,8 @@ namespace TeheManX4.Forms
             {
                 TextEntry textBox = new TextEntry();
                 textBox.boxes = TextEntry.GetBoxes(textData, BitConverter.ToUInt16(textData, i * 2));
-                if ((textBox.boxes[0].data[0] & 0x800) == 0x800)
-                    textBox.boxHigh = true;
+                if ((BitConverter.ToUInt16(textBox.boxes[0].data,0) & 0x800) == 0x800)
+                    textBox.boxLow = true;
                 textBoxes.Add(textBox);
             }
             //Setup Texture Rect
@@ -152,6 +157,7 @@ namespace TeheManX4.Forms
 
             //Setup Ints
             enable = false;
+            lowCheck.IsChecked = textBoxes[0].boxLow;
             textInt.Maximum = (BitConverter.ToUInt16(textData, 0) / 2) - 1;
             boxInt.Maximum = textBoxes[0].boxes.Count - 1;
             charInt.Value = 0;
@@ -440,6 +446,17 @@ namespace TeheManX4.Forms
             textWindow.ResizeMode = ResizeMode.NoResize;
             textWindow.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
+            if (!double.IsNaN(autoTextLeft))
+            {
+                textWindow.Left = autoTextLeft;
+                textWindow.Top = autoTextTop;
+            }
+            textWindow.Closed += (s, arg) =>
+            {
+                autoTextLeft = textWindow.Left;
+                autoTextTop = textWindow.Top;
+            };
+
             List<TextBox> uiBoxes = new List<TextBox>();
             uiBoxes.Add(new TextBox() { MaxLength = MaxLineLength, MaxLines = 1, Foreground = Brushes.White , Background = Brushes.Black , FontSize = 18});
             uiBoxes.Add(new TextBox() { MaxLength = MaxLineLength, MaxLines = 1, Foreground = Brushes.White, Background = Brushes.Black, FontSize = 18 });
@@ -577,6 +594,7 @@ namespace TeheManX4.Forms
             boxInt.Maximum = textBoxes[(int)e.NewValue].boxes.Count - 1;
             charInt.Value = 0;
             charInt.Maximum = (textBoxes[(int)e.NewValue].boxes[0].data.Length / 2) - 1;
+            lowCheck.IsChecked = textBoxes[(int)e.NewValue].boxLow;
             DrawText();
             UpdateCharInfo();
             enable = true;
@@ -607,7 +625,14 @@ namespace TeheManX4.Forms
 
             valInt.Value = val ^ 0x8000;
         }
-
+        private void lowCheck_CheckedChange(object sender, RoutedEventArgs e)
+        {
+            if (!enable) return;
+            if (textBoxes[(int)textInt.Value].boxLow)
+                textBoxes[(int)textInt.Value].boxLow = false;
+            else
+                textBoxes[(int)textInt.Value].boxLow = true;
+        }
         private void lineCheck_CheckChange(object sender, RoutedEventArgs e)
         {
             if (!enable) return;

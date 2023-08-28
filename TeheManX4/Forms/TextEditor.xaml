@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TeheManX4.Forms"
         mc:Ignorable="d"
-        Title="TeheMan X4 Text Editor - " Height="730" Width="720" ResizeMode="NoResize">
+        Title="TeheMan X4 Text Editor - " Height="730" Width="720" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Window.Resources>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="White"/>
@@ -68,7 +68,7 @@
 
             <!--Char Controls-->
             <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom">
-
+                <CheckBox x:Name="lowCheck" Checked="lowCheck_CheckedChange" Unchecked="lowCheck_CheckedChange">Low</CheckBox>
                 <CheckBox x:Name="endCheck" Checked="endCheck_CheckChange" Unchecked="endCheck_CheckChange">End</CheckBox>
                 <CheckBox x:Name="lineCheck" Checked="lineCheck_CheckChange" Unchecked="lineCheck_CheckChange">Line Break</CheckBox>
                 <CheckBox x:Name="newCheck" Checked="newCheck_CheckChange" Unchecked="newCheck_CheckChange">End Box</CheckBox>

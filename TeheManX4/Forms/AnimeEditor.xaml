@@ -9,7 +9,6 @@
     <Grid Background="Black">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition/>
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -17,44 +16,45 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <!--Clut Dump Settings-->
-        <StackPanel Width="200">
-            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Clut Dump Settings</Label>
-            <Border BorderBrush="White" BorderThickness="2">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Foreground="White" FontSize="26" Margin="0,0,12,0">Dest-Set:</Label>
-                        <local:NumInt Minimum="0" Maximum="#7F" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="destInt" ValueChanged="destInt_ValueChanged"></local:NumInt>
+        <WrapPanel Orientation="Horizontal">
+            <!--Clut Dump Settings-->
+            <StackPanel Width="200">
+                <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Clut Dump Settings</Label>
+                <Border BorderBrush="White" BorderThickness="2">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Foreground="White" FontSize="26" Margin="0,0,12,0">Dest-Set:</Label>
+                            <local:NumInt Minimum="0" Maximum="#7F" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="destInt" ValueChanged="destInt_ValueChanged"></local:NumInt>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Foreground="White" FontSize="26" Margin="0,0,31,0">Length:</Label>
+                            <local:NumInt Minimum="1" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="lengthInt" ValueChanged="lengthInt_ValueChanged"></local:NumInt>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Foreground="White" FontSize="26" Margin="0,0,31,0">Length:</Label>
-                        <local:NumInt Minimum="1" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="lengthInt" ValueChanged="lengthInt_ValueChanged"></local:NumInt>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-        
-        <!--Clut Frame Settings-->
-        <StackPanel Width="200" Grid.Column="1">
-            <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Clut Frame Settings</Label>
-            <Border BorderBrush="White" BorderThickness="2">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Foreground="White" FontSize="26" Margin="0,0,29,0">Src-Set:</Label>
-                        <local:NumInt Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="setInt" ValueChanged="setInt_ValueChanged"></local:NumInt>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Foreground="White" FontSize="26" Margin="0,0,46,0">Timer:</Label>
-                        <local:NumInt Minimum="0" Maximum="#FF" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="timerint" ValueChanged="timerint_ValueChanged"></local:NumInt>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            <StackPanel Orientation="Horizontal">
-                <Label Foreground="White" FontSize="26" Margin="0,0,42,0">Frame:</Label>
-                <local:NumInt Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="frameInt" ValueChanged="frameInt_ValueChanged"></local:NumInt>
+                </Border>
             </StackPanel>
-        </StackPanel>
-        
+
+            <!--Clut Frame Settings-->
+            <StackPanel Width="200" Grid.Column="1">
+                <Label HorizontalAlignment="Center" Foreground="White" FontSize="16" FontFamily="Consolas" Padding="3,5,1,5">Clut Frame Settings</Label>
+                <Border BorderBrush="White" BorderThickness="2">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Foreground="White" FontSize="26" Margin="0,0,29,0">Src-Set:</Label>
+                            <local:NumInt Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="setInt" ValueChanged="setInt_ValueChanged"></local:NumInt>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Foreground="White" FontSize="26" Margin="0,0,46,0">Timer:</Label>
+                            <local:NumInt Minimum="0" Maximum="#FF" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="timerint" ValueChanged="timerint_ValueChanged"></local:NumInt>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal">
+                    <Label Foreground="White" FontSize="26" Margin="0,0,42,0">Frame:</Label>
+                    <local:NumInt Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" x:Name="frameInt" ValueChanged="frameInt_ValueChanged"></local:NumInt>
+                </StackPanel>
+            </StackPanel>
+        </WrapPanel>
         <StackPanel Orientation="Horizontal" Grid.Row="1">
             <local:NumInt x:Name="animeInt" Minimum="0" FontSize="28" Width="70" ButtonSpinnerWidth="25" ValueChanged="animeInt_ValueChanged"></local:NumInt>
             <Label FontSize="28">Anime</Label>
@@ -95,7 +95,7 @@
                     </Canvas>
                 </ScrollViewer>
                 <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1">
-                    <Button Width="50" Style="{StaticResource TileButton}" Click="CopyButton_Click">Copy</Button>
+                    <Button Width="50" Style="{StaticResource TileButton}" Click="CopyButton_Click" Height="31" VerticalAlignment="Top">Copy</Button>
                     <Button Width="50" Style="{StaticResource TileButton}" Click="PasteButton_Click">Paste</Button>
                     <Button Style="{StaticResource TileButton}" Click="GearBtn_Click">⚙️</Button>
                     <Button Width="25" Style="{StaticResource TileButton}" Click="AddButton_Click">+</Button>

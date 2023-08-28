@@ -134,6 +134,7 @@
     <Compile Include="Forms\Tile16Editor.xaml.cs">
       <DependentUpon>Tile16Editor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Layout.cs" />
     <Compile Include="Redux.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Sprite.cs" />
@@ -284,6 +285,9 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <EmbeddedResource Include="Resources\Patches\Texture_8bpp\setuppagesc.bin" />
+    <EmbeddedResource Include="Resources\Patches\Texture_8bpp\drawbackgroundc.bin" />
+    <None Include="Resources\Lua\MMX4_Tools.lua" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\App.config" />
@@ -580,5 +584,10 @@
   <ItemGroup>
     <Resource Include="Resources\EnemyPhotos\Vertical Meteor.bmp" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\EnemyPhotos\Rollin%27 Gear.bmp" />
+    <Resource Include="Resources\EnemyPhotos\Unknown.bmp" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TeheManX4.Forms"
         mc:Ignorable="d"
-        Title="TeheMan X4 Editor Settings" Height="350" Width="350" ResizeMode="NoResize" Closing="Window_Closing">
+        Title="TeheMan X4 Editor Settings" WindowStartupLocation="CenterScreen" Height="420" Width="350" ResizeMode="NoResize" Closing="Window_Closing">
     <Window.Resources>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="White"/>
@@ -47,10 +47,19 @@
                 <StackPanel Background="#191919">
                     <Label HorizontalAlignment="Center">Options</Label>
                 </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <local:NumInt FontSize="22" x:Name="displayInt" ValueChanged="displayInt_ValueChanged" FormatString="" ParsingNumberStyle="Integer" ShowButtonSpinner="False" Minimum="0" Maximum="9000" Height="30" Width="55"></local:NumInt>
+                    <Label>Display Referance Width</Label>
+                </StackPanel>
                 <CheckBox x:Name="dontUpdateCheck" Checked="dontUpdateCheck_Change" Unchecked="dontUpdateCheck_Change">Dont check for Updates</CheckBox>
                 <CheckBox x:Name="saveReloadCheck" Checked="saveOnReloadCheck_Change" Unchecked="saveOnReloadCheck_Change">Save Current Level On Reload</CheckBox>
                 <CheckBox x:Name="ultimateCheck" Checked="ultimateCheck_Check_Change" Unchecked="ultimateCheck_Check_Change">Use Ultimate Armor File for Reload</CheckBox>
                 <CheckBox x:Name="zeroCheck" Checked="zeroCheck_CheckChange" Unchecked="zeroCheck_CheckChange">Default to Zero</CheckBox>
+                <CheckBox x:Name="layoutCheck" Checked="layoutCheck_Change" Unchecked="layoutCheck_Change">Dont Save Layout</CheckBox>
+                <CheckBox x:Name="screenCheck" Checked="screenCheck_Change" Unchecked="screenCheck_Change">Auto Launch Screen Layout Viewer</CheckBox>
+                <CheckBox x:Name="extraCheck" Checked="autoCheck_Change" Unchecked="autoCheck_Change">Auto Launch Screen Flags Viewer</CheckBox>
+                <CheckBox x:Name="filesCheck" Checked="filesCheck_Change" Unchecked="filesCheck_Change">Auto Launch Files Viewer</CheckBox>
+                <CheckBox x:Name="openCheck" Checked="openCheck_Change" Unchecked="openCheck_Change">Dont Reset Level Id When Opening</CheckBox>
             </StackPanel>
         </Grid>
     </ScrollViewer>

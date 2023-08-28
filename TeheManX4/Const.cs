@@ -7,15 +7,28 @@ namespace TeheManX4
     static class Const
     {
         public static readonly string reproURL = "https://api.github.com/repos/Kuumba123/TeheManX4_Editor/releases/latest";
-        public const string Version = "1.2.1";
+        public const string Version = "1.3";
         public static readonly string[] pastVersions =
         {
+            "1.3",
+            "1.2.1",
             "1.2",
             "1.1.1",
             "1.1",
             "1.0"
         };
         public const byte FilesCount = 40;
+        public static readonly string texture8bppURL = "https://github.com/Kuumba123/MegaManX4_Texture8bpp";
+        public static readonly string tileSetStruct =
+@"typedef struct{
+    int layer;
+    ushort settings; // tttt ttti , T = TileCount I = Increament-X (if 1 Increament-X instead of Y)
+    ushort destX;
+    ushort destY;
+    ushort pad;
+    u_char*tableP;
+    int proceed;
+} tilesetStruct;";
         public const int MaxUndo = 512;
         public const long Crc = 0x8E9397EA;
         public static readonly int[] CordTabe =
@@ -58,6 +71,7 @@ namespace TeheManX4
         public const uint ClutInfoPointersAddress = 0x8010b3c0;
         public const uint ClutDestPointersAddress = 0x8010b354;
         public const uint ArcBufferAddress = 0x80178000;
+        public const int ArcBufferSize = 0x7B000;
         public const uint LayoutBufferAddress = 0x80141be8;
         public const int MaxCameraTriggerDataSize = 0x66C; //in bytes
         public const uint CameraTriggerFreeDataAddress = 0x8010a7a0; //Start of Data that should be Dumped at
@@ -97,10 +111,10 @@ namespace TeheManX4
             102,    //Dragoon
             195,    //StingRay
             129,    //PeaCock
-            121,    //Owl
+            115,    //Owl
             207,    //Beast
             2,      //Colonel
-            60,
+            60,     //Space Port
             78,     //Final Weapon
             46      //Refights
         };
@@ -108,8 +122,10 @@ namespace TeheManX4
         public static Dictionary<byte, (string name, string info)> mainObjInfo = new Dictionary<byte, (string name, string info)>()
         {
             {0, ("Eregion","") },
+            {1, ("Rollin' Gear","") },
             {2, ("Item-Carrier","") },
             {3, ("Spike Marl","") },
+            {4, ("Unused","") },
             {5, ("Bees","") },
             {6, ("Mad Bull","") },
             {7, ("Trap Blast (Claws)","") },

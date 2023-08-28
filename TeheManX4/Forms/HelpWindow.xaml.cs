@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace TeheManX4.Forms
 {
@@ -46,11 +47,15 @@ namespace TeheManX4.Forms
             "mess when you change the enemies in a stage (just watch the video)",
             //5
             "This is where you can edit the width and height of the level layout , if the width/height is less than  what it orignally was " +
-            $"the right and bottom of layout will be trimmed off. The max size of the layout data is {Const.MaxLayoutSize} " +
+            $"the right and bottom of layout will be trimmed off. The max total size of the layout data is {Const.MaxLayoutSize} (decimal) bytes" +
             $"however that is for all the levels combined so if you need extra layout space just trim off some other level. " +
             $"(Some of the sub-levels dont use there entire layout so it would be a good choice to trim those) " +
-            $"The total size label tells you the amount of space the level uses (in CPU's RAM). " +
-            $"It does not include the CLUT but it does include the backup screen data. " +
+            $"The size in cpu ram label label tells you the amount of space the level uses (in CPU's RAM). " +
+            $"It DOES include the CLUT and it DOES include the backup screen data. " +
+            "The size in arc buffer label tells you the amount of space the player file + level file + clut uses (in CPU's RAM). " +
+            "If the size in arc buffer label is red then that means the Editor couldn't find the respective player file. " +
+            $"The game dedicates {Convert.ToString(Const.ArcBufferSize,16).ToUpper()} bytes towards the Arc Buffer however you still need to leave some extra space " +
+            $"since the game might load additional data into the Arc Buffer for the Bosses VH part of the VAB file. " +
             $"The total enemies count does not include the start enemies and " +
             $"lastly you can also edit the amount of 16x16 tiles and the amount of screens per level. " +
             $"there is no real limet you have to worry about while editing these to parameters , just make sure " +

@@ -113,13 +113,14 @@ namespace TeheManX4.Forms
             enable = false;
             MainWindow.window.screenE.tileInt.Value = selectedTile;
             MainWindow.window.screenE.cordInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2];
-            MainWindow.window.screenE.pageInt.Value = (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3]) & 7;
+            MainWindow.window.screenE.pageInt.Value = (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3]);
             MainWindow.window.screenE.clutInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 1];
             MainWindow.window.screenE.colInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 0];
             enable = true;
         }
         public void AssignLimits()
         {
+
             int screenAmount = PSX.levels[Level.Id].screenData.Length / 0x200;
             int tileAmount = PSX.levels[Level.Id].tileInfo.Length / 4;
             screenAmount--;
@@ -133,6 +134,11 @@ namespace TeheManX4.Forms
             MainWindow.window.screenE.tileInt.Maximum = tileAmount;
             if(MainWindow.window.screenE.tileInt.Value > tileAmount)
                 MainWindow.window.screenE.tileInt.Value = tileAmount;
+            int maxClut = ClutEditor.GetMaxClutId();
+            
+            MainWindow.window.screenE.clutInt.Maximum = maxClut;
+            if (MainWindow.window.screenE.clutInt.Value > maxClut)
+                MainWindow.window.screenE.clutInt.Value = maxClut;
 
             DrawScreen();
             DrawTiles();
@@ -175,7 +181,6 @@ namespace TeheManX4.Forms
             else
                 tileGrid.ShowGridLines = true;
         }
-
         private void Extra_Click(object sender, RoutedEventArgs e)
         {
             if (ListWindow.extraOpen)
@@ -351,7 +356,6 @@ namespace TeheManX4.Forms
                 }
             }
         }
-
         private void screenImage_MouseMove(object sender, MouseEventArgs e)
         {
             Point p = e.GetPosition(screenImage);
@@ -501,7 +505,6 @@ namespace TeheManX4.Forms
             UpdateCursor();
             DrawTile();
         }
-
         private void cordInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -569,7 +572,6 @@ namespace TeheManX4.Forms
             if (MainWindow.window.x16E.tileCol == (selectedTile >> 8))
                 MainWindow.window.x16E.DrawTiles();
         }
-
         private void pageInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -636,7 +638,6 @@ namespace TeheManX4.Forms
             if (MainWindow.window.x16E.tileCol == (selectedTile >> 8))
                 MainWindow.window.x16E.DrawTiles();
         }
-
         private void clutInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -702,7 +703,6 @@ namespace TeheManX4.Forms
             if (MainWindow.window.x16E.tileCol == (selectedTile >> 8))
                 MainWindow.window.x16E.DrawTiles();
         }
-
         private void colInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)

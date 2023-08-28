@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:TeheManX4"
         xmlns:forms="clr-namespace:TeheManX4.Forms" xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="TeheMan X4 Editor" Width="1205" Height="930" MinWidth="700" MinHeight="520" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" Loaded="Window_Loaded" MouseDown="Window_MouseDown">
+        Title="TeheMan X4 Editor" Width="1250" Height="930" MinWidth="500" MinHeight="520" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" Loaded="Window_Loaded" MouseDown="Window_MouseDown">
     <Window.Resources>
         <system:String x:Key="Partition">QuickStart</system:String>
     </Window.Resources>
@@ -21,9 +21,8 @@
         <DockPanel Name="dockBar" Style="{StaticResource toolBar}">
             <Button Name="openBtn" Style="{StaticResource ToolButton}" Click="openBtn_Click">Open</Button>
             <Button Name="saveBtn" Style="{StaticResource ToolButton}" Click="saveBtn_Click">Save</Button>
-            <Button Name="saveAsButn" Style="{StaticResource ToolButton}" Click="saveAsButn_Click">Save As</Button>
-            <Button Name="toolsBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="toolsBtn_Click" >Tools</Button>
             <Button Name="aboutBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="aboutBtn_Click">About</Button>
+            <Button Name="toolsBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="toolsBtn_Click" >Tools</Button>
             <Button Name="reloadBtn" Style="{StaticResource ToolButton}" Click="reloadBtn_Click">ReLoad</Button>
             <Button Name="settingsBtn" Style="{StaticResource ToolButton}" Click="SettingsBtn_Click">Settings</Button>
             <Button Name="sizeBtn" Style="{StaticResource ToolButton}" Click="sizeBtn_Click">Size</Button>
@@ -31,10 +30,10 @@
             <Button Name="helpBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="helpBtn_Click">Help</Button>
             <Button Name="undoBtn" Style="{StaticResource ToolButton}" HorizontalAlignment="Left" Click="undoBtn_Click">Undo</Button>
         </DockPanel>
-        <dockablz:Layout x:Name="dock" Partition="{StaticResource Partition}" Grid.Row="1" Foreground="Blue">
+        <dockablz:Layout x:Name="dock" Partition="{StaticResource Partition}" x:FieldModifier="public" Grid.Row="1" Foreground="Blue">
             <dragablz:TabablzControl Name="hub" Visibility="Hidden" Focusable="False" ConsolidateOrphanedItems="True">
                 <dragablz:TabablzControl.InterTabController>
-                    <dragablz:InterTabController Partition="{StaticResource Partition}" />
+                    <dragablz:InterTabController x:Name="controller" Partition="{StaticResource Partition}" />
                 </dragablz:TabablzControl.InterTabController>
 
                 <TabItem Name="layoutTab" IsSelected="True">

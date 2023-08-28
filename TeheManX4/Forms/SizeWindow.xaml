@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TeheManX4.Forms"
         mc:Ignorable="d"
-        Title="" ResizeMode="NoResize" Height="300" Width="300" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+        Title="" ResizeMode="NoResize" Height="405" Width="300" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Window.Resources>
         <Style TargetType="Label">
             <Setter Property="Foreground" Value="White"/>
@@ -50,6 +50,10 @@
             <StackPanel Orientation="Horizontal">
                 <local:NumInt Minimum="1" Maximum="#FF" x:Name="heightInt" ValueChanged="Int_ValueChanged"></local:NumInt>
                 <Label>Layout Height</Label>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <local:NumInt Minimum="#80" Maximum="#200" x:Name="clutInt" ValueChanged="ClutInt_ValueChanged"></local:NumInt>
+                <Label x:Name="setLbl">Clut Set Count</Label>
             </StackPanel>
             <Label x:Name="cpuSizeLbl"></Label>
             <Label x:Name="arcSizeLbl"></Label>

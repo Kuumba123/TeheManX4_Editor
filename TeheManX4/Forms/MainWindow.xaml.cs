@@ -1,11 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using TeheManX4.Forms;
 
 namespace TeheManX4
@@ -22,6 +24,7 @@ namespace TeheManX4
         internal static ListWindow extraWindow;
         internal static ListWindow loadWindow;
         internal static Settings settings = Settings.SetDefaultSettings();
+        internal static DispatcherTimer animeTimer = new DispatcherTimer();
         #endregion
 
         #region Properties
@@ -35,17 +38,14 @@ namespace TeheManX4
             if (window == null)
             {
                 window = this;
+                Level.LoadCollisionTiles();
                 PSX.lastSave = null;
                 Settings.nops.EnableRaisingEvents = true;
                 Settings.nops.OutputDataReceived += NOPS_OutputDataReceived;
-                //Window Sizing
-                {
-                    int Y = (int)(40 * SystemParameters.PrimaryScreenWidth / 100);
-                    window.layoutE.selectImage.MaxWidth = Y;
-                    window.screenE.tileImage.MaxWidth = Y;
-                    window.x16E.textureImage.MaxWidth = Y;
-                    window.enemyE.canvas.Width = window.enemyE.bmp.PixelWidth;
-                }
+
+                animeTimer.Interval = TimeSpan.FromMilliseconds(1000 / 60);
+                animeTimer.Tick += AnimeEditor.ColorAnime_Tick;
+                animeTimer.Start();
 
                 //Open Settings
                 if (File.Exists("Settings.json"))
@@ -61,7 +61,55 @@ namespace TeheManX4
                         Application.Current.Shutdown();
                     }
                 }
-                Level.LoadCollisionTiles();
+                DefineSizing();
+
+                if (File.Exists("Layout.json"))
+                {
+                    Layout layout = JsonConvert.DeserializeObject<Layout>(File.ReadAllText("Layout.json"));
+                    LoadLayout(layout.mainWindowLayout, window);
+
+                    foreach (var child in layout.windowLayouts)
+                    {
+                        MainWindow win = new MainWindow();
+                        LoadLayout(child, win);
+                        win.Show();
+                    }
+                    ListWindow.extraLeft = layout.extraLeft;
+                    ListWindow.extraTop = layout.extraTop;
+
+                    ListWindow.screenWidth = layout.screenWidth;
+                    ListWindow.screenHeight = layout.screenHeight;
+                    ListWindow.screenLeft = layout.screenLeft;
+                    ListWindow.screenTop = layout.screenTop;
+                    ListWindow.screenState = layout.screenState;
+
+                    ListWindow.fileWidth = layout.fileWidth;
+                    ListWindow.fileHeight = layout.fileHeight;
+                    ListWindow.fileLeft = layout.fileLeft;
+                    ListWindow.fileTop = layout.fileTop;
+                    ListWindow.fileState = layout.fileState;
+
+                    ListWindow.clutTop = layout.clutTop;
+                    ListWindow.clutLeft = layout.clutLeft;
+
+                    ColorDialog.pickerTop = layout.pickerTop;
+                    ColorDialog.pickerLeft = layout.pickerLeft;
+
+                    Tile16Editor.manualClutLeft = layout.manualClutLeft;
+                    Tile16Editor.manualClutTop = layout.manualClutTop;
+
+                    ListWindow.tileLeft = layout.tileLeft;
+                    ListWindow.tileTop = layout.tileTop;
+
+                    TextEditor.autoTextTop = layout.autoTextTop;
+                    TextEditor.autoTextLeft = layout.autoTextLeft;
+
+                    ToolsWindow.isoToolsOpen = layout.isoToolsOpen;
+                    ToolsWindow.textureToolsOpen = layout.textureToolsOpen;
+                    ToolsWindow.soundToolsOpen = layout.soundToolsOpen;
+                    ToolsWindow.otherToolsOpen = layout.otherToolsOpen;
+                }
+                LockWindows();
 
                 //Get Arguments
                 string[] args = Environment.GetCommandLineArgs();
@@ -113,14 +161,15 @@ namespace TeheManX4
                     Settings.DefineBoxes();
                     Settings.DefineCheckpoints();
                     Undo.CreateUndoList();
-                    Level.Id = 0;
+                    if (!settings.dontResetId)
+                        Level.Id = 0;
                     Level.AssignPallete();
                     PSX.levels[Level.Id].LoadTextures();
                     //Draw Everything
                     Update();
                     window.spawnE.SetupSpecialSpawn();
                     window.camE.SetupBorderInfo();
-                    hub.Visibility = Visibility.Visible;
+                    UnlockWindows();
                 }
             }
             else
@@ -135,17 +184,16 @@ namespace TeheManX4
         #region Methods
         public void Update()
         {
-            //Update Everything Else
             window.layoutE.AssignLimits();
             window.screenE.AssignLimits();
             window.x16E.AssignLimits();
             window.x16E.DrawTextures();
-            window.clutE.DrawTextures();
             window.clutE.DrawClut();
+            window.clutE.DrawTextures();
             window.clutE.UpdateClutTxt();
             window.spawnE.SetSpawnSettings();
-            window.enemyE.ReDraw();
             window.camE.SetupCheckValues();
+            window.enemyE.ReDraw();
             window.animeE.AssignLimits();
             UpdateViewrCam();
             UpdateEnemyViewerCam();
@@ -172,7 +220,7 @@ namespace TeheManX4
         }
         public void UpdateEnemyViewerCam()
         {
-            window.enemyE.camLbl.Content = "X:" + Convert.ToString(window.enemyE.viewerX, 16).PadLeft(4, '0').ToUpper() + " Y:" + Convert.ToString(window.enemyE.viewerY, 16).PadLeft(4, '0').ToUpper();
+            window.enemyE.camLbl.Content = "X:" + Convert.ToString(window.enemyE.viewerX >> 8, 16).PadLeft(4, '0').ToUpper() + " Y:" + Convert.ToString(window.enemyE.viewerY, 16).PadLeft(4, '0').ToUpper();
         }
         private void OpenGame()
         {
@@ -185,7 +233,9 @@ namespace TeheManX4
                 //Look for all Game Files
                 if (!File.Exists(fd.SelectedPath + "/SLUS_005.61"))
                 {
+                    PSX.levels.Clear();
                     MessageBox.Show("The PSX.EXE (SLUS_005.61) was not found");
+                    LockWindows();
                     return;
                 }
                 //PSX.EXE was found
@@ -196,12 +246,14 @@ namespace TeheManX4
                 if (PSX.levels.Count == 0)
                 {
                     MessageBox.Show("No ARC level files were found");
+                    LockWindows();
                     return;
                 }
                 else if (PSX.levels.Count != Const.FilesCount)
                 {
-                    MessageBox.Show("You need to have all level files in order to use this editor");
                     PSX.levels.Clear();
+                    MessageBox.Show("You need to have all level files in order to use this editor");
+                    LockWindows();
                     return;
                 }
 
@@ -223,14 +275,15 @@ namespace TeheManX4
                 Settings.DefineBoxes();
                 Settings.DefineCheckpoints();
                 Undo.CreateUndoList();
-                Level.Id = 0;
+                if (!settings.dontResetId)
+                    Level.Id = 0;
                 Level.AssignPallete();
                 PSX.levels[Level.Id].LoadTextures();
                 //Draw Everything
                 Update();
                 window.spawnE.SetupSpecialSpawn();
                 window.camE.SetupBorderInfo();
-                hub.Visibility = Visibility.Visible;
+                UnlockWindows();
             }
         }
         private void ProcessUndo()
@@ -454,23 +507,32 @@ namespace TeheManX4
         {
             if (key == "Up")
             {
-                ClutEditor.clut = (ClutEditor.clut - 1) & 0x3F;
+                ClutEditor.clut = ClutEditor.clut - 1;
+                if(ClutEditor.clut < 0 && ClutEditor.bgF == 1) ClutEditor.clut = 0x1AF;
+                if (ClutEditor.bgF == 0 && ClutEditor.clut < 0)
+                    ClutEditor.clut = 0x3F;
+
                 window.clutE.DrawTextures();
                 window.clutE.UpdateClutTxt();
             }
             else if (key == "Down")
             {
-                ClutEditor.clut = (ClutEditor.clut + 1) & 0x3F;
+                ClutEditor.clut = ClutEditor.clut + 1;
+                if (ClutEditor.clut > (window.clutE.clutGrid.RowDefinitions.Count - 1) || ClutEditor.clut > 0x1AF)
+                    ClutEditor.clut = 0;
+                if (ClutEditor.bgF == 0 && ClutEditor.clut > 0x3F)
+                    ClutEditor.clut = 0;
+
                 window.clutE.DrawTextures();
                 window.clutE.UpdateClutTxt();
             }
             else if (key == "Left")
             {
-                window.clutE.UpdateTpageButton((ClutEditor.page - 1) & 7);
+                window.clutE.UpdateTpageButton(ClutEditor.page - 1);
             }
             else if (key == "Right")
             {
-                window.clutE.UpdateTpageButton((ClutEditor.page + 1) & 7);
+                window.clutE.UpdateTpageButton(ClutEditor.page + 1);
             }
             else if (key == "D1")
             {
@@ -737,7 +799,10 @@ namespace TeheManX4
         {
             if (!Level.ValidLevel(Level.Id) || !Level.ValidLayouts())
                 return;
-            Level.SaveLevel(Level.Id);
+            if (PSX.levels[Level.Id].isMid())
+                Level.SaveLevel(Level.Id - 1);
+            else
+                Level.SaveLevel(Level.Id);
             Level.SaveLayouts();
             if (!Level.ValidPlayer())
                 return;
@@ -760,21 +825,25 @@ namespace TeheManX4
                     await Redux.Write(Settings.levelScreenAddress, PSX.levels[Level.Id].screenData);
                     await Redux.Write(Settings.levelTileAddress, PSX.levels[Level.Id].tileInfo);
 
-                    //Backup Screen Data
-                    await Redux.Write((uint)(Settings.levelSize + Settings.levelStartAddress) + 0x1000, PSX.levels[Level.Id].screenData);
+                    int clutLength = -1;
 
                     //CLUT
                     if (!Level.zeroFlag && PSX.levels[Level.Id].clut_X != null)
                     {
                         await Redux.Write((uint)(Settings.levelSize + Settings.levelStartAddress), PSX.levels[Level.Id].clut_X.entries[0].data);
                         await Redux.Write(Const.UpdateClutAddress, (byte)1);
+                        clutLength = PSX.levels[Level.Id].clut_X.entries[0].data.Length;
                     }
                     else if (Level.zeroFlag && PSX.levels[Level.Id].clut_Z != null)
                     {
                         await Redux.Write((uint)(Settings.levelSize + Settings.levelStartAddress), PSX.levels[Level.Id].clut_Z.entries[0].data);
                         await Redux.Write(Const.UpdateClutAddress, (byte)1);
+                        clutLength = PSX.levels[Level.Id].clut_Z.entries[0].data.Length;
                     }
 
+                    //Backup Screen Data
+                    if(clutLength != -1)
+                        await Redux.Write((uint)(Settings.levelSize + Settings.levelStartAddress + clutLength), PSX.levels[Level.Id].screenData);
 
                     //Layout
                     await Redux.Write(Const.LayoutBufferAddress, PSX.levels[Level.Id].layout);
@@ -794,7 +863,34 @@ namespace TeheManX4
 
                     //Enemy Data
                     int index = PSX.levels[Level.Id].GetIndex();
-                    if(index < 26)
+
+                    //Check Points
+                    await SpawnWindow.WriteCheckPoints();
+
+                    //Clut Anime
+                    if (PSX.levels[Level.Id].clutAnime != null)
+                        await Redux.Write(Settings.levelClutAnimeAddress, PSX.levels[Level.Id].clutAnime);
+
+                    if(index < 27)
+                    {
+                        uint infoAddress = BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(Const.ClutInfoPointersAddress + index * 4)));
+                        if(infoAddress != 0)
+                        {
+                            //Clut Anime Info
+                            uint startAddress = BitConverter.ToUInt32(PSX.exe,PSX.CpuToOffset(infoAddress));
+                            data = new byte[infoAddress - startAddress];
+                            Array.Copy(PSX.exe,PSX.CpuToOffset(startAddress), data, 0, data.Length);
+                            await Redux.Write(startAddress, data);
+
+                            //Clut Dest Info
+                            data = new byte[(Const.MaxClutAnimes[index] + 1) * 2];
+                            startAddress = BitConverter.ToUInt32(PSX.exe, PSX.CpuToOffset((uint)(Const.ClutDestPointersAddress + index * 4)));
+                            Array.Copy(PSX.exe, PSX.CpuToOffset(startAddress), data, 0, data.Length);
+                            await Redux.Write(startAddress, data);
+                        }
+                    }
+
+                    if (index < 26)
                     {
                         if (PSX.levels[Level.Id].isMid())
                             index--;
@@ -813,6 +909,10 @@ namespace TeheManX4
                         if (id != 9 && id != 0xA) //2nd Half
                         {
                             index++;
+
+                            if (PSX.levels[Level.Id].arc.filename == "ST0B_0X.ARC")
+                                index++;
+
                             if (!Level.enemyExpand)
                                 await Redux.Write(PSX.OffsetToCpu(Const.EnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.EnemyDataPointersOffset + index * 4));
                             await Redux.Write(PSX.OffsetToCpu(Const.StartEnemyDataPointersOffset + index * 4), BitConverter.ToInt32(PSX.exe, Const.StartEnemyDataPointersOffset + index * 4));
@@ -826,15 +926,6 @@ namespace TeheManX4
                         data = new byte[0x7FC];
                         Array.Copy(PSX.exe, PSX.CpuToOffset(Const.CameraTriggerFreeDataAddress), data, 0, data.Length);
                         await Redux.Write(Const.CameraTriggerFreeDataAddress, data);
-                    }
-
-                    //Check Points
-                    await SpawnWindow.WriteCheckPoints();
-
-                    //Clut Anime
-                    if (PSX.levels[Level.Id].clutAnime != null)
-                    {
-                        await Redux.Write(Settings.levelClutAnimeAddress, PSX.levels[Level.Id].clutAnime);
                     }
 
                     //Textures
@@ -896,7 +987,7 @@ namespace TeheManX4
         }
         private int GetHubIndex()
         {
-            System.Collections.Generic.IEnumerable<Dragablz.DragablzItem> tabs = this.hub.GetOrderedHeaders();
+            IEnumerable<Dragablz.DragablzItem> tabs = this.hub.GetOrderedHeaders();
 
             int index = 0;
             foreach (var t in tabs)
@@ -921,6 +1012,279 @@ namespace TeheManX4
             }
             return -1;
         }
+        private void SaveLayout() //TODO: evenchually  figure out way to save docking layouts
+        {
+            Layout layout = new Layout();
+
+            if (ListWindow.extraOpen)
+            {
+                ListWindow.extraLeft = extraWindow.Left;
+                ListWindow.extraTop = extraWindow.Top;
+            }
+            layout.extraLeft = ListWindow.extraLeft;
+            layout.extraTop = ListWindow.extraTop;
+
+            if (ListWindow.screenViewOpen)
+            {
+                ListWindow.screenLeft = layoutWindow.Left;
+                ListWindow.screenTop = layoutWindow.Top;
+                ListWindow.screenWidth = layoutWindow.Width;
+                ListWindow.screenHeight = layoutWindow.Height;
+                ListWindow.screenState = (int)layoutWindow.WindowState;
+            }
+            layout.screenLeft = ListWindow.screenLeft;
+            layout.screenTop = ListWindow.screenTop;
+            layout.screenWidth = ListWindow.screenWidth;
+            layout.screenHeight = ListWindow.screenHeight;
+            layout.screenState = ListWindow.screenState;
+
+            if (ListWindow.fileViewOpen)
+            {
+                ListWindow.fileLeft = fileWindow.Left;
+                ListWindow.fileTop = fileWindow.Top;
+                ListWindow.fileWidth = fileWindow.Width;
+                ListWindow.fileHeight = fileWindow.Height;
+                ListWindow.fileState = (int)fileWindow.WindowState;
+            }
+            layout.fileLeft = ListWindow.fileLeft;
+            layout.fileTop = ListWindow.fileTop;
+            layout.fileWidth = ListWindow.fileWidth;
+            layout.fileHeight = ListWindow.fileHeight;
+            layout.fileState = ListWindow.fileState;
+
+            layout.clutLeft = ListWindow.clutLeft;
+            layout.clutTop = ListWindow.clutTop;
+
+            layout.pickerLeft = ColorDialog.pickerLeft;
+            layout.pickerTop = ColorDialog.pickerTop;
+
+            layout.manualClutLeft = Tile16Editor.manualClutLeft;
+            layout.manualClutTop = Tile16Editor.manualClutTop;
+
+            layout.tileLeft = ListWindow.tileLeft;
+            layout.tileTop = ListWindow.tileTop;
+
+            layout.autoTextTop = TextEditor.autoTextTop;
+            layout.autoTextLeft = TextEditor.autoTextLeft;
+
+            layout.textureToolsOpen = ToolsWindow.textureToolsOpen;
+            layout.soundToolsOpen = ToolsWindow.soundToolsOpen;
+            layout.isoToolsOpen = ToolsWindow.isoToolsOpen;
+            layout.otherToolsOpen = ToolsWindow.otherToolsOpen;
+
+            foreach (Window childWind in Application.Current.Windows)
+            {
+                if (childWind.GetType() != typeof(MainWindow)) continue;
+                MainWindow window = childWind as MainWindow;
+                if (window.Width < 1) continue;
+
+                WindowLayout windowLayout = new WindowLayout();
+                windowLayout.top = window.Top;
+                windowLayout.left = window.Left;
+                windowLayout.width = window.Width;
+                windowLayout.height = window.Height;
+                windowLayout.max = window.max;
+                windowLayout.windowState = (int)window.WindowState;
+                if(window.dock.Content.GetType() == typeof(Dragablz.Dockablz.Branch))
+                {
+                    windowLayout.type = typeof(BranchLayout);
+                    List<Dragablz.Dockablz.Branch> branches = new List<Dragablz.Dockablz.Branch>();
+                    List<Dragablz.Dockablz.Branch> innerBranches = new List<Dragablz.Dockablz.Branch>();
+                    branches.Add(window.dock.Content as Dragablz.Dockablz.Branch);
+                    List<string> tabs = new List<string>();
+                    BranchLayout startBranch = windowLayout.child as BranchLayout;
+                    BranchLayout nextBranch = windowLayout.child as BranchLayout;
+                BranchLoop:
+                    foreach (var b in branches)
+                    {
+                        if(b.FirstItem.GetType() == typeof(Dragablz.Dockablz.Branch))
+                        {
+                            innerBranches.Add(new Dragablz.Dockablz.Branch()
+                            {
+                                Orientation = ((Dragablz.Dockablz.Branch)b.FirstItem).Orientation,
+                                FirstItem = ((Dragablz.Dockablz.Branch)b.FirstItem).FirstItem,
+                                FirstItemLength = ((Dragablz.Dockablz.Branch)b.FirstItem).FirstItemLength,
+                                SecondItem = b.SecondItem,
+                                SecondItemLength = b.SecondItemLength
+                            });
+                        }
+                        else
+                        {
+                            foreach (var t in ((Dragablz.TabablzControl)branches[0].FirstItem).Items)
+                            {
+                                if (t.GetType() != typeof(TabItem)) continue;
+                                tabs.Add(((TabItem)t).Name);
+                            }
+                        }
+                        if (b.SecondItem.GetType() == typeof(BranchLayout))
+                        {
+                            innerBranches.Add(new Dragablz.Dockablz.Branch()
+                            {
+                                Orientation = ((Dragablz.Dockablz.Branch)b.SecondItem).Orientation,
+                                FirstItem = ((Dragablz.Dockablz.Branch)b.SecondItem).FirstItem,
+                                FirstItemLength = ((Dragablz.Dockablz.Branch)b.SecondItem).FirstItemLength,
+                                SecondItem = ((Dragablz.Dockablz.Branch)b.SecondItem).SecondItem,
+                                SecondItemLength = ((Dragablz.Dockablz.Branch)b.SecondItem).SecondItemLength
+                            });
+                        }
+                        else
+                        {
+                            foreach (var t in ((Dragablz.TabablzControl)branches[0].SecondItem).Items)
+                            {
+                                if (t.GetType() != typeof(TabItem)) continue;
+                                tabs.Add(((TabItem)t).Name);
+                            }
+                        }
+                    }
+                    branches.Clear();
+                    if(innerBranches.Count != 0)
+                    {
+                        branches = new List<Dragablz.Dockablz.Branch>(innerBranches);
+                        innerBranches.Clear();
+                        goto BranchLoop;
+                    }
+                    windowLayout.child = tabs;
+                }
+                else
+                {
+                    windowLayout.type = typeof(Dragablz.TabablzControl);
+                    List<string> tabs = new List<string>();
+                    foreach (var t in window.hub.GetOrderedHeaders())
+                    {
+                        if (t.GetType() != typeof(Dragablz.DragablzItem)) continue;
+                        tabs.Add(((TabItem)t.Content).Name);
+                    }
+                    windowLayout.child = tabs;
+                }
+
+                if (window == MainWindow.window)
+                    layout.mainWindowLayout = windowLayout;
+                else
+                    layout.windowLayouts.Add(windowLayout);
+            }
+            //Done
+            string json = JsonConvert.SerializeObject(layout, Formatting.Indented);
+            File.WriteAllText("Layout.json", json);
+        }
+        private void LoadLayout(WindowLayout winlayout, MainWindow win)
+        {
+            win.WindowStartupLocation = WindowStartupLocation.Manual;
+            win.Left = winlayout.left;
+            win.Top = winlayout.top;
+            win.Width = winlayout.width;
+            win.Height = winlayout.height;
+            if (winlayout.max)
+                win.max = true;
+            else
+                win.Uid = winlayout.windowState.ToString();
+
+            if (win != window)
+            {
+                win.hub.Items.Clear();
+                object child = winlayout.child;
+                Type type = winlayout.type;
+                if(type != typeof(Dragablz.TabablzControl))
+                {
+
+                }
+                else
+                {
+                    Newtonsoft.Json.Linq.JArray jArray = child as Newtonsoft.Json.Linq.JArray;
+                    foreach (var j in jArray)
+                    {
+                        string t = j.ToString();
+
+                        if(t == "layoutTab")
+                        {
+                            window.hub.RemoveFromSource(window.layoutTab);
+                            win.hub.AddToSource(window.layoutTab);
+                        }
+                        else if(t == "screenTab")
+                        {
+                            window.hub.RemoveFromSource(window.screenTab);
+                            win.hub.AddToSource(window.screenTab);
+                        }
+                        else if (t == "x16Tab")
+                        {
+                            window.hub.RemoveFromSource(window.x16Tab);
+                            win.hub.AddToSource(window.x16Tab);
+                        }
+                        else if (t == "clutTab")
+                        {
+                            window.hub.RemoveFromSource(window.clutTab);
+                            win.hub.AddToSource(window.clutTab);
+                        }
+                        else if (t == "enemyTab")
+                        {
+                            window.hub.RemoveFromSource(window.enemyTab);
+                            win.hub.AddToSource(window.enemyTab);
+                        }
+                        else if (t == "spawnTab")
+                        {
+                            window.hub.RemoveFromSource(window.spawnTab);
+                            win.hub.AddToSource(window.spawnTab);
+                        }
+                        else if (t == "bgTab")
+                        {
+                            window.hub.RemoveFromSource(window.bgTab);
+                            win.hub.AddToSource(window.bgTab);
+                        }
+                        else if (t == "camTab")
+                        {
+                            window.hub.RemoveFromSource(window.camTab);
+                            win.hub.AddToSource(window.camTab);
+                        }
+                        else if (t == "animeTab")
+                        {
+                            window.hub.RemoveFromSource(window.animeTab);
+                            win.hub.AddToSource(window.animeTab);
+                        }
+                    }
+                }
+            }
+        }
+        private void LockWindows()
+        {
+            foreach (var childWind in Application.Current.Windows)
+            {
+                if (childWind.GetType() != typeof(MainWindow)) continue;
+                MainWindow window = childWind as MainWindow;
+                if (window.Width < 1) continue;
+                window.hub.Visibility = Visibility.Hidden;
+            }
+            if (ListWindow.screenViewOpen)
+                layoutWindow.Close();
+            if (ListWindow.extraOpen)
+                extraWindow.Close();
+            if (ListWindow.fileViewOpen)
+                fileWindow.Close();
+        }
+        private void UnlockWindows()
+        {
+            foreach (var childWind in Application.Current.Windows)
+            {
+                if (childWind.GetType() != typeof(MainWindow)) continue;
+                MainWindow window = childWind as MainWindow;
+                if (window.Width < 1) continue;
+                window.hub.Visibility = Visibility.Visible;
+            }
+            if(settings.autoScreen && !ListWindow.screenViewOpen)
+            {
+                layoutWindow = new ListWindow(0);
+                layoutWindow.Show();
+            }
+            if(settings.autoExtra && !ListWindow.extraOpen)
+            {
+                extraWindow = new ListWindow(2);
+                extraWindow.Show();
+            }
+            if(settings.autoFiles && !ListWindow.fileViewOpen)
+            {
+                fileWindow = new ListWindow(4);
+                fileWindow.Show();
+            }
+            window.Focus();
+        }
         private void CloseChildWindows()
         {
             var childWindows = Application.Current.Windows.Cast<Window>().Where(w => w != Application.Current.MainWindow).ToList();
@@ -928,36 +1292,31 @@ namespace TeheManX4
             foreach (var window in childWindows)
                 window.Close();
         }
-#endregion Methods
+        public void DefineSizing()
+        {
+            int W;
+            if (settings.referanceWidth < 200)
+                W = (int)(40 * SystemParameters.PrimaryScreenWidth / 100);
+            else
+                W = 40 * settings.referanceWidth / 100;
+            window.layoutE.selectImage.MaxWidth = W;
+            window.screenE.tileImage.MaxWidth = W;
+            window.x16E.textureImage.MaxWidth = W;
+            window.enemyE.canvas.Width = window.enemyE.bmp.PixelWidth;
+        }
+        #endregion Methods
 
         #region Events
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-#if false
-            byte[] data = File.ReadAllBytes(@"D:\Decompile\MMX6 Decompiled\MMX6 Files\ROCK_X6.DAT");
-            int sector;
-            int fileId = 0;
-            MemoryStream ms = new MemoryStream(data);
-            BinaryReader br = new BinaryReader(ms);
-            while ((sector = br.ReadInt32()) != 0)
+            if (this.max) //Layout Stuff
             {
-                int size = br.ReadInt32();
-                long backup = br.BaseStream.Position;
-                int arcSize = BitConverter.ToInt32(data, sector * 0x800 + 4);
-
-                string fileName;
-                if (arcSize != size)
-                    fileName = "ARC_" + Convert.ToString(fileId, 16).ToUpper() + ".BIN";
-                else
-                    fileName = "ARC_" + Convert.ToString(fileId, 16).ToUpper() + ".ARC";
-
-                br.BaseStream.Position = sector * 0x800;
-                File.WriteAllBytes(@"D:\Decompile\MMX6 Decompiled\MMX6 Files\ARC\" + fileName, br.ReadBytes(size));
-                br.BaseStream.Position = backup;
-                fileId++;
+                this.WindowStyle = WindowStyle.None;
+                this.WindowState = WindowState.Maximized;
             }
-#endif
-            EnemyEditor.DefineOffsets();
+            else if(this.Uid != "")
+                this.WindowState = (WindowState)Convert.ToInt32(this.Uid);
+
             //Check for Update
             if (settings.dontUpdate) return;
             using (HttpClient client = new HttpClient())
@@ -1047,6 +1406,8 @@ namespace TeheManX4
                             goto End;
                     }
                 }
+                if (PSX.levels.Count == 0) goto End;
+
                 if (PSX.edit)
                 {
                     var result = MessageBox.Show("You have edited the PSX.EXE without saving.\nAre you sure you want to exit the editor?", "WARNING", MessageBoxButton.YesNo);
@@ -1059,6 +1420,8 @@ namespace TeheManX4
                         goto End;
                 }
             End:
+                if(!settings.dontSaveLayout)
+                    SaveLayout();
                 CloseChildWindows();
             }
         }
@@ -1099,9 +1462,18 @@ namespace TeheManX4
                 }else if(key == "Z" && PSX.levels.Count == Const.FilesCount)
                 {
                     ProcessUndo();
-                }else if(key == "C" && PSX.levels.Count == Const.FilesCount && Keyboard.FocusedElement.GetType() != typeof(Xceed.Wpf.Toolkit.WatermarkTextBox))
+                }else if(key == "C" && PSX.levels.Count == Const.FilesCount && Keyboard.FocusedElement.GetType() != typeof(Xceed.Wpf.Toolkit.WatermarkTextBox) && hub.SelectedItem != null)
                 {
-                    ToggleCollision();
+                    if (((TabItem)hub.SelectedItem).Name == "animeTab")
+                        window.animeE.CopySet();
+                    else
+                        ToggleCollision();
+                    return;
+                }
+                else if(key == "V" && PSX.levels.Count == Const.FilesCount && Keyboard.FocusedElement.GetType() != typeof(Xceed.Wpf.Toolkit.WatermarkTextBox) && hub.SelectedItem != null)
+                {
+                    if (((TabItem)hub.SelectedItem).Name == "animeTab")
+                        window.animeE.PasteSet();
                 }
                 else if (key == "Left" && PSX.levels.Count == Const.FilesCount && this.hub.Items.Count > 1)
                 {
@@ -1171,12 +1543,6 @@ namespace TeheManX4
         private void openBtn_Click(object sender, RoutedEventArgs e)
         {
             OpenGame();
-        }
-        private void saveAsButn_Click(object sender, RoutedEventArgs e)
-        {
-            if (PSX.levels.Count != Const.FilesCount)
-                return;
-
         }
         private void saveBtn_Click(object sender, RoutedEventArgs e)
         {

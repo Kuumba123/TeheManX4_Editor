@@ -1,4 +1,6 @@
-﻿namespace TeheManX4
+﻿using System.Collections.Generic;
+
+namespace TeheManX4
 {
     class Enemy
     {
@@ -16,5 +18,10 @@
         {
         }
         #endregion Constructors
+    }
+    class EnemyCollection
+    {
+        public List<Enemy> enemies;
+        public List<Enemy> startEnemies;
     }
 }

@@ -13,10 +13,21 @@ namespace TeheManX4.Forms
     /// </summary>
     public partial class ToolsWindow : Window
     {
+        #region Fields
+        public static bool textureToolsOpen;
+        public static bool soundToolsOpen;
+        public static bool isoToolsOpen;
+        public static bool otherToolsOpen;
+        #endregion Fields
+
         #region Constructors
         public ToolsWindow()
         {
             InitializeComponent();
+            textureExpand.IsExpanded = textureToolsOpen;
+            soundExpand.IsExpanded = soundToolsOpen;
+            isoExpand.IsExpanded= isoToolsOpen;
+            otherExpand.IsExpanded= otherToolsOpen;
         }
         #endregion Constructors
 
@@ -116,7 +127,6 @@ namespace TeheManX4.Forms
                 }
             }
         }
-
         private void texBinBtn_Click(object sender, RoutedEventArgs e)
         {
             using (var fd = new OpenFileDialog())
@@ -144,7 +154,7 @@ namespace TeheManX4.Forms
                         {
                             if (en.type >> 8 != 1)
                                 continue;
-                            File.WriteAllBytes(sfd.SelectedPath + "\\" + fd.SafeFileName + "_" + "TEX" + Convert.ToString(i, 16).PadLeft(2, '0') + ".BIN", en.data);
+                            File.WriteAllBytes(sfd.SelectedPath + "\\" + fd.SafeFileName + "_" + "TEX" + Convert.ToString(i, 16).PadLeft(2, '0') + ".bin", en.data);
                             i++;
                         }
                         //Extraction Completed
@@ -164,7 +174,6 @@ namespace TeheManX4.Forms
                 }
             }
         }
-
         private void inertTexBtn_Click(object sender, RoutedEventArgs e)
         {
             using(var fd = new OpenFileDialog())
@@ -193,12 +202,44 @@ namespace TeheManX4.Forms
                         return;
                     }
                     var lw = new ListWindow(pac, 0);
-                    lw.Title = fd.SafeFileName + " Textures";
+                    lw.Title = fd.SafeFileName + " Textures [Right Click for extra Options]";
                     lw.ShowDialog(); ;
                 }
             }
         }
-
+        private void insertBinBtn_Click(object sender, RoutedEventArgs e)
+        {
+            using (var fd = new OpenFileDialog())
+            {
+                fd.Filter = "ARC |*.ARC";
+                fd.Title = "Open an MegaMan X4 ARC File that contains Textures";
+                if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    ARC pac = new ARC(File.ReadAllBytes(fd.FileName));
+                    pac.path = fd.FileName;
+                    if (pac.entries.Count == 0)
+                    {
+                        System.Windows.MessageBox.Show("This is an invalid ARC file");
+                        return;
+                    }
+                    int amount = 0;
+                    foreach (Entry en in pac.entries)
+                    {
+                        if (en.type >> 16 != 1)
+                            continue;
+                        amount++;
+                    }
+                    if (amount == 0)
+                    {
+                        System.Windows.MessageBox.Show("There are no textures in\n" + fd.SafeFileName);
+                        return;
+                    }
+                    var lw = new ListWindow(pac, 1);
+                    lw.Title = fd.SafeFileName + " Textures [Right Click for extra Options]";
+                    lw.ShowDialog(); ;
+                }
+            }
+        }
         private void EditCompressedTexturesButton_Click(object sender, RoutedEventArgs e)
         {
             using (var fd = new OpenFileDialog())
@@ -218,7 +259,42 @@ namespace TeheManX4.Forms
                         System.Windows.MessageBox.Show("This arc file contains NO Compressed Textures");
                     }
                     ListWindow list = new ListWindow();
-                    list.CompressedTextures(arc);
+                    list.Width = 696;
+                    list.Height = 696;
+
+                    const int frame = 4;
+
+                    byte[] entryData = arc.LoadEntry(2);
+                    byte[] pixels = new byte[0x8000];
+
+                    int start = BitConverter.ToInt32(entryData, 0);
+                    int tileCount = BitConverter.ToInt32(entryData, start + frame * 4) >> 0x14;
+                    Level.DecompressTexture(entryData, pixels, (BitConverter.ToInt32(entryData, start + frame * 4) & 0xFFFFF) + start);
+                    Level.ConvertBmp(pixels);
+
+                    WriteableBitmap displayTex = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Indexed4, Const.GreyScalePallete);
+
+                    int offset = 0;
+                    int y = 0;
+                    while (tileCount != 0)
+                    {
+                        if (tileCount >= 16)
+                        {
+                            displayTex.WritePixels(new Int32Rect(0, y, 256, 16), pixels, 128, offset);
+                            tileCount -= 16;
+                            y += 16;
+                            offset += 128 * 16;
+                        }
+                        else
+                        {
+                            displayTex.WritePixels(new Int32Rect(0, y, tileCount * 16, 16), pixels, tileCount * 16 / 2, offset);
+                            tileCount = 0;
+                        }
+                    }
+
+                    System.Windows.Controls.Image image = new System.Windows.Controls.Image();
+                    image.Source = displayTex;
+                    list.pannel.Children.Add(image);
                     list.ShowDialog();
                 }
 
@@ -371,7 +447,6 @@ namespace TeheManX4.Forms
                             headers.Add(arc.entries[i].data);
                             bodys.Add(arc.entries[i + 1].data);
                             indexes.Add(i);
-                            i += 2;
                         }
                     }
                     if (headers.Count == 0)
@@ -436,6 +511,8 @@ namespace TeheManX4.Forms
 
                     //Setup Form
                     ListWindow win = new ListWindow();
+                    win.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    win.scroll.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Hidden;
                     win.Title = fd.SafeFileName + " VAB Files";
                     win.Width = 330;
                     win.Height = 180;
@@ -602,8 +679,6 @@ namespace TeheManX4.Forms
         }
         private void editTextBtn_Click(object sender, RoutedEventArgs e)
         {
-            //System.Windows.MessageBox.Show("currently not finished.");
-            //return;
             using(var fd = new OpenFileDialog())
             {
                 fd.Filter = "ARC |*ARC";
@@ -626,6 +701,13 @@ namespace TeheManX4.Forms
                     t.ShowDialog();
                 }
             }
+        }
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            textureToolsOpen = textureExpand.IsExpanded;
+            soundToolsOpen = soundExpand.IsExpanded;
+            isoToolsOpen = isoExpand.IsExpanded;
+            otherToolsOpen = otherExpand.IsExpanded;
         }
         #endregion Events
     }

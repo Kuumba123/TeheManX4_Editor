@@ -165,7 +165,7 @@ namespace TeheManX4.Forms
             MainWindow.window.animeE.clutTxt.Text = "CLUT: " + Convert.ToString(clut, 16).ToUpper().PadLeft(2, '0'); //Update Txt
             Canvas.SetTop(MainWindow.window.animeE.cursor, clut * 16);
         }
-        private bool ContainsAnime()
+        public bool ContainsAnime()
         {
             if (PSX.levels[Level.Id].clutAnime == null)
             {
@@ -174,9 +174,29 @@ namespace TeheManX4.Forms
             }
             return true;
         }
+        public void CopySet()
+        {
+            if (ContainsAnime())
+                copyId = clut;
+        }
+        public void PasteSet()
+        {
+            if (ContainsAnime() && copyId != -1)
+            {
+                Array.Copy(PSX.levels[Level.Id].clutAnime, copyId * 32, PSX.levels[Level.Id].clutAnime, clut * 32, 32);
+                PSX.levels[Level.Id].edit = true;
+                DrawClut();
+            }
+        }
         #endregion Methoids
 
         #region Events
+        public static void ColorAnime_Tick(object sender, EventArgs e)
+        {
+            if (PSX.levels.Count != Const.FilesCount) return;
+
+            //MainWindow.window.layoutE.DrawLayout();
+        }
         private void Color_Down(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.ChangedButton == System.Windows.Input.MouseButton.Right) //Change Color
@@ -211,18 +231,12 @@ namespace TeheManX4.Forms
         }
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ContainsAnime())
-                copyId = clut;
+            CopySet();
         }
 
         private void PasteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ContainsAnime() && copyId != -1)
-            {
-                Array.Copy(PSX.levels[Level.Id].clutAnime, copyId * 32, PSX.levels[Level.Id].clutAnime, clut * 32, 32);
-                PSX.levels[Level.Id].edit = true;
-                DrawClut();
-            }
+            PasteSet();
         }
 
         private void GearBtn_Click(object sender, RoutedEventArgs e)

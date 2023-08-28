@@ -62,6 +62,13 @@ namespace TeheManX4.Forms
             int total = PSX.levels[Level.Id].screenData.Length / 0x200;
             IntPtr ptr = layoutBMP.BackBuffer;
             layoutBMP.Lock();
+
+            if (updateLbl)
+            {
+                foreach (var l in screenLabels)
+                    l.Visibility = Visibility.Collapsed;
+            }
+
             for (int y = 0; y < 3; y++)
             {
                 for (int x = 0; x < 3; x++)
@@ -83,20 +90,8 @@ namespace TeheManX4.Forms
                                 {
                                     if (Grid.GetColumn(l) == x && Grid.GetRow(l) == y)
                                     {
-                                        if (l.Visibility != Visibility.Visible)
-                                            l.Visibility = Visibility.Visible;
+                                        l.Visibility = Visibility.Visible;
                                         l.Content = Convert.ToString(screen, 16).ToUpper();
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                foreach (var l in screenLabels)
-                                {
-                                    if (Grid.GetColumn(l) == x && Grid.GetRow(l) == y)
-                                    {
-                                        if (l.Visibility != Visibility.Hidden)
-                                            l.Visibility = Visibility.Hidden;
                                     }
                                 }
                             }

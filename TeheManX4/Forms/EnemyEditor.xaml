@@ -14,8 +14,9 @@
         </Grid.ColumnDefinitions>
         <!--Layout Viewer-->
         <Viewbox Grid.ColumnSpan="2" HorizontalAlignment="Left">
-            <Canvas x:Name="canvas" AllowDrop="True" Height="512" ClipToBounds="True" Drop="canvas_Drop" PreviewMouseMove="canvas_PreviewMouseMove" PreviewMouseUp="canvas_PreviewMouseUp">
+            <Canvas x:Name="canvas" AllowDrop="True" Height="512" ClipToBounds="True" MouseDown="canvas_MouseDown" Drop="canvas_Drop" PreviewMouseMove="canvas_PreviewMouseMove" PreviewMouseUp="canvas_PreviewMouseUp">
                 <Image x:Name="layoutImage" x:FieldModifier="public"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Rectangle x:Name="selectRect" Visibility="Collapsed" Stroke="Blue" Panel.ZIndex="1"></Rectangle>
             </Canvas>
         </Viewbox>
         <Label x:Name="camLbl" Grid.Row="0" IsHitTestVisible="False" Foreground="White" FontFamily="Consolas" HorizontalAlignment="Left" FontSize="20"></Label>
@@ -40,8 +41,10 @@
             <ScrollViewer x:Name="bar" Focusable="True" Background="Black" Grid.Row="1" Width="375" HorizontalAlignment="Right" >
                 <VirtualizingStackPanel>
                     <Image Width="92" Uid="0"  Source="..\Resources\EnemyPhotos\Eregion.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="122" Uid="1"  Source="..\Resources\EnemyPhotos\Rollin' Gear.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="70" Uid="2"  Source="..\Resources\EnemyPhotos\Item Carrier.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="78" Uid="3"  Source="..\Resources\EnemyPhotos\Spike Marl.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
+                    <Image Width="50" Uid="4"  Source="..\Resources\EnemyPhotos\Unknown.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="42" Uid="5"  Source="..\Resources\EnemyPhotos\Bees.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="170" Uid="6"  Source="..\Resources\EnemyPhotos\Mad Bull.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
                     <Image Width="90" Uid="7"  Source="..\Resources\EnemyPhotos\Trap Blaster.bmp" MouseMove="EnemyImage_MouseMove" MouseRightButtonUp="EnemyImage_MouseRightButtonUp"></Image>
@@ -172,9 +175,9 @@
                     </StackPanel>
                 </StackPanel>
                 <WrapPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2">
-                    <Button Margin="5,30,5,5" Width="85" Height="35" Click="AddEnemy_Click">Add</Button>
-                    <Button Margin="5,30,5,5" Width="85" Height="35" Click="RemoveEnemy_Click">Remove</Button>
-                    <Button Margin="5,30,5,5" Width="85" Height="35" Click="ToolsBtn_Click" HorizontalAlignment="Left">Tools</Button>
+                    <Button Margin="5,30,5,5" Width="70" Height="35" Click="AddEnemy_Click">Add</Button>
+                    <Button Margin="5,30,5,5" Width="80" Height="35" Click="RemoveEnemy_Click">Remove</Button>
+                    <Button Margin="5,30,5,5" Width="70" Height="35" Click="ToolsBtn_Click" HorizontalAlignment="Left">Tools</Button>
                     <Button Margin="5,30,5,5" Width="30" Height="30" Padding="0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Help_Click">?</Button>
                 </WrapPanel>
             </Grid>

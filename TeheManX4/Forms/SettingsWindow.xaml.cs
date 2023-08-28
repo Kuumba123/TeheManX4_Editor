@@ -28,10 +28,16 @@ namespace TeheManX4.Forms
             useNopsCheck.IsChecked = MainWindow.settings.useNops;
 
             //Options
+            displayInt.Value = MainWindow.settings.referanceWidth;
             dontUpdateCheck.IsChecked = MainWindow.settings.dontUpdate;
             saveReloadCheck.IsChecked = MainWindow.settings.saveOnReload;
             ultimateCheck.IsChecked = MainWindow.settings.ultimate;
             zeroCheck.IsChecked = MainWindow.settings.defaultZero;
+            layoutCheck.IsChecked = MainWindow.settings.dontSaveLayout;
+            screenCheck.IsChecked = MainWindow.settings.autoScreen;
+            extraCheck.IsChecked = MainWindow.settings.autoExtra;
+            filesCheck.IsChecked = MainWindow.settings.autoFiles;
+            openCheck.IsChecked = MainWindow.settings.dontResetId;
             enable = true;
         }
         #endregion Constructors
@@ -56,6 +62,12 @@ namespace TeheManX4.Forms
             if (!enable)
                 return;
             MainWindow.settings.useNops = (bool)useNopsCheck.IsChecked;
+            edited = true;
+        }
+        private void displayInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (!enable || e.NewValue == null || e.OldValue == null) return;
+            MainWindow.settings.referanceWidth = (int)e.NewValue;
             edited = true;
         }
         private void dontUpdateCheck_Change(object sender, RoutedEventArgs e)
@@ -86,6 +98,43 @@ namespace TeheManX4.Forms
             MainWindow.settings.defaultZero = (bool)zeroCheck.IsChecked;
             edited = true;
         }
+        private void layoutCheck_Change(object sender, RoutedEventArgs e)
+        {
+            if (!enable)
+                return;
+            MainWindow.settings.dontSaveLayout = (bool)layoutCheck.IsChecked;
+            edited = true;
+        }
+        private void screenCheck_Change(object sender, RoutedEventArgs e)
+        {
+            if (!enable)
+                return;
+            MainWindow.settings.autoScreen = (bool)screenCheck.IsChecked;
+            edited = true;
+        }
+
+        private void autoCheck_Change(object sender, RoutedEventArgs e)
+        {
+            if (!enable)
+                return;
+            MainWindow.settings.autoExtra = (bool)extraCheck.IsChecked;
+            edited = true;
+        }
+        private void filesCheck_Change(object sender, RoutedEventArgs e)
+        {
+            if (!enable)
+                return;
+            MainWindow.settings.autoFiles = (bool)filesCheck.IsChecked;
+            edited = true;
+        }
+
+        private void openCheck_Change(object sender, RoutedEventArgs e)
+        {
+            if (!enable)
+                return;
+            MainWindow.settings.dontResetId = (bool)openCheck.IsChecked;
+            edited = true;
+        }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (edited)
@@ -100,6 +149,7 @@ namespace TeheManX4.Forms
                     MessageBox.Show(ex.Message);
                     Application.Current.Shutdown();
                 }
+                MainWindow.window.DefineSizing();
             }
         }
         #endregion Events

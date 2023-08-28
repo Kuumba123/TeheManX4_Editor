@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,6 +16,8 @@ namespace TeheManX4.Forms
     {
         #region Fields
         internal static List<List<Undo>> undos = new List<List<Undo>>();
+        public static double manualClutLeft = double.NaN;
+        public static double manualClutTop = double.NaN;
         #endregion Fields
 
         #region Properties
@@ -77,16 +80,34 @@ namespace TeheManX4.Forms
         {
             palBtn.Content = "CLUT: " + Convert.ToString(clut, 16).ToUpper().PadLeft(2, '0'); //Update Txt
             IntPtr pixelDataPtr = Level.bmp[page + 8].BackBuffer;
+            BitmapPalette pal;
+            int stride = 128;
+            PixelFormat format = PixelFormats.Indexed4;
+            if (page < 8)
+                pal = Level.palette[clut + 64];
+            else
+            {
+                List<Color> colors = new List<Color>();
+
+                for (int i = 0; i < 256; i++)
+                {
+                    if ( ((((i >> 4) + clut) * 16) + (i & 0xF)) > 8191) break;
+                    colors.Add(Level.palette[clut + 64 + (i >> 4)].Colors[i & 0xF]);
+                }
+                pal = new BitmapPalette(colors);
+                format = PixelFormats.Indexed8;
+                stride = 256;
+            }
 
             MainWindow.window.x16E.textureImage.Source = BitmapSource.Create(256,
-                256,
-                96,
-                96,
-                PixelFormats.Indexed4,
-                Level.palette[clut + 64],
-                pixelDataPtr,
-                256 * 128,
-                128);
+            256,
+            96,
+            96,
+            format,
+            pal,
+            pixelDataPtr,
+            256 * stride,
+            stride);
         }
         public void DrawTile()
         {
@@ -104,7 +125,7 @@ namespace TeheManX4.Forms
             enable = false;
             MainWindow.window.x16E.tileInt.Value = selectedTile;
             MainWindow.window.x16E.cordInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2];
-            MainWindow.window.x16E.pageInt.Value = (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3]) & 7;
+            MainWindow.window.x16E.pageInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3];
             MainWindow.window.x16E.clutInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 1];
             MainWindow.window.x16E.colInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 0];
             enable = true;
@@ -116,9 +137,19 @@ namespace TeheManX4.Forms
             //Max Tile Settings
             MainWindow.window.x16E.tileInt.Maximum = tileAmount;
             if (MainWindow.window.x16E.tileInt.Value > tileAmount)
-            {
                 MainWindow.window.x16E.tileInt.Value = tileAmount;
-            }
+
+            int maxClut = ClutEditor.GetMaxClutId();
+            
+            MainWindow.window.x16E.clutInt.Maximum = maxClut;
+            if (MainWindow.window.x16E.clutInt.Value > maxClut)
+                MainWindow.window.x16E.clutInt.Value = maxClut;
+
+            if (clut > maxClut)
+                clut = maxClut;
+            if (page > pageInt.Maximum)
+                page = (int)pageInt.Maximum;
+
             DrawTiles();
             DrawTile();
             UpdateTileText();
@@ -133,6 +164,8 @@ namespace TeheManX4.Forms
             int i = Convert.ToInt32(b.Content.ToString().Trim(), 16);
             if (page == i)
                 return;
+
+
             page = i;
             if (past2 != null)
             {
@@ -146,7 +179,6 @@ namespace TeheManX4.Forms
             past2 = b;
             DrawTextures();
         }
-
         private void TileButton_Click(object sender, RoutedEventArgs e)
         {
             Button b = (Button)sender;
@@ -315,7 +347,7 @@ namespace TeheManX4.Forms
 
                 //Update
                 MainWindow.window.x16E.cordInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2];
-                MainWindow.window.x16E.pageInt.Value = (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3]) & 7;
+                MainWindow.window.x16E.pageInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3];
                 MainWindow.window.layoutE.DrawLayout();
                 MainWindow.window.layoutE.DrawScreen();
                 MainWindow.window.screenE.DrawScreen();
@@ -325,7 +357,7 @@ namespace TeheManX4.Forms
                 if (MainWindow.window.screenE.selectedTile == selectedTile)
                 {
                     MainWindow.window.screenE.cordInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 2];
-                    MainWindow.window.screenE.pageInt.Value = (PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3]) & 7;
+                    MainWindow.window.screenE.pageInt.Value = PSX.levels[Level.Id].tileInfo[(selectedTile * 4) + 3];
                     MainWindow.window.screenE.DrawTile();
                 }
                 if (MainWindow.window.screenE.tileCol == (selectedTile >> 8))
@@ -334,12 +366,12 @@ namespace TeheManX4.Forms
                     MainWindow.window.x16E.DrawTiles();
             }
         }
-
         private void textureImage_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            int max = ClutEditor.GetMaxClutId();
             if (e.Delta > 0)
             {
-                if (clut != 0x3F)
+                if (clut != max)
                     clut++;
                 else
                     clut = 0;
@@ -349,11 +381,10 @@ namespace TeheManX4.Forms
                 if (clut != 0)
                     clut--;
                 else
-                    clut = 0x3F;
+                    clut = max;
             }
             DrawTextures();
         }
-
         private void tileGridBtn_Click(object sender, RoutedEventArgs e)
         {
             if (tileGrid.ShowGridLines)
@@ -361,7 +392,6 @@ namespace TeheManX4.Forms
             else
                 tileGrid.ShowGridLines = true;
         }
-
         private void textureGridBtn_Click(object sender, RoutedEventArgs e)
         {
             if (textureGrid.ShowGridLines)
@@ -369,7 +399,6 @@ namespace TeheManX4.Forms
             else
                 textureGrid.ShowGridLines = true;
         }
-
         private void tileInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -380,7 +409,6 @@ namespace TeheManX4.Forms
             UpdateCursor();
             DrawTile();
         }
-
         private void cordInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -449,7 +477,6 @@ namespace TeheManX4.Forms
             if (MainWindow.window.screenE.tileCol == (selectedTile >> 8))
                 MainWindow.window.screenE.DrawTiles();
         }
-
         private void pageInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -516,7 +543,6 @@ namespace TeheManX4.Forms
             if (MainWindow.window.screenE.tileCol == (selectedTile >> 8))
                 MainWindow.window.screenE.DrawTiles();
         }
-
         private void clutInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -584,7 +610,6 @@ namespace TeheManX4.Forms
             if (MainWindow.window.screenE.tileCol == (selectedTile >> 8))
                 MainWindow.window.screenE.DrawTiles();
         }
-
         private void colInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (PSX.levels.Count != Const.FilesCount || e.NewValue == null || e.OldValue == null || !enable)
@@ -654,6 +679,208 @@ namespace TeheManX4.Forms
                 MainWindow.window.x16E.DrawTile();
 
                 MainWindow.window.enemyE.Draw();
+            }
+        }
+        private void palBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ListWindow clutWin = new ListWindow();
+            clutWin.Title = "Set Clut";
+            clutWin.pannel.Orientation = Orientation.Horizontal;
+            if (!double.IsNaN(manualClutLeft))
+            {
+                clutWin.Left = manualClutLeft;
+                clutWin.Top = manualClutTop;
+            }
+            clutWin.ResizeMode = ResizeMode.NoResize;
+            clutWin.Width = 140;
+            clutWin.Height = 85;
+            clutWin.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            NumInt clutInt = new NumInt()
+            {
+                FontSize = 28,
+                Width = 70,
+                ButtonSpinnerWidth = 25,
+                Minimum = 0,
+                Maximum = ClutEditor.GetMaxClutId(),
+                Value = clut
+            };
+            Label clutLabel = new Label()
+            {
+                FontSize = 26,
+                Content = "ID"
+            };
+            clutWin.Closing += (s, arg) =>
+            {
+                manualClutLeft = clutWin.Left;
+                manualClutTop = clutWin.Top;
+                if(clutInt.Value != null)
+                {
+                    if (clutInt.Value != clut)
+                    {
+                        clut = (int)clutInt.Value;
+                        DrawTextures();
+                    }
+                }
+            };
+
+            clutWin.pannel.Children.Add(clutInt);
+            clutWin.pannel.Children.Add(clutLabel);
+            clutWin.ShowDialog();
+        }
+        private void GearBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ListWindow win = new ListWindow();
+            win.Title = "Level Tools";
+            win.Height = 230;
+            win.Width = 350;
+            win.ResizeMode = ResizeMode.NoResize;
+            win.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            win.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+
+            Button layoutExport = new Button()
+            {
+                Content = "Export Layout Data as BIN",
+                Uid = "l"
+            };
+            layoutExport.Click += GearOptionExport_Click;
+            Button layoutImport = new Button()
+            {
+                Content = "Import Layout Data as BIN",
+                Uid = "l"
+            };
+            layoutImport.Click += GearOptionImport_Click;
+
+            Button screenExport = new Button()
+            {
+                Content = "Export Screen Data as BIN",
+                Uid = "s"
+            };
+            screenExport.Click += GearOptionExport_Click;
+            Button screenImport = new Button()
+            {
+                Content = "Import Screen Data as BIN",
+                Uid = "s"
+            };
+            screenImport.Click += GearOptionImport_Click;
+
+            Button tileExport = new Button()
+            {
+                Content = "Export Tile Data as BIN",
+                Uid = "t"
+            };
+            tileExport .Click += GearOptionExport_Click;
+            Button tileImport = new Button()
+            {
+                Content = "Import Tile Data as Bin",
+                Uid = "t"
+            };
+            tileImport .Click += GearOptionImport_Click;
+
+            win.pannel.Children.Add(layoutExport);
+            win.pannel.Children.Add(layoutImport);
+
+            win.pannel.Children.Add(screenExport);
+            win.pannel.Children.Add(screenImport);
+
+            win.pannel.Children.Add(tileExport);
+            win.pannel.Children.Add(tileImport);
+
+            win.ShowDialog();
+        }
+        private void GearOptionImport_Click(object sender, RoutedEventArgs e)
+        {
+            using(var fd = new System.Windows.Forms.OpenFileDialog())
+            {
+                fd.Filter = "BIN File|*.bin";
+                fd.Title = "Select Save File";
+                if(fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    FileInfo fileInfo = new FileInfo(fd.FileName);
+                    switch (((UIElement)sender).Uid)
+                    {
+                        case "l":   //Layout
+                            if(fileInfo.Length != PSX.levels[Level.Id].size * 3)
+                            {
+                                MessageBox.Show("Provided BIN does not match the layout size. " +
+                                    "Set the layout size in the Size Window.");
+                                return;
+                            }
+                            PSX.levels[Level.Id].layout = File.ReadAllBytes(fd.FileName);
+                            LayoutEditor.undos.Clear();
+                            PSX.edit = true;
+                            break;
+
+                        case "s": //Screen
+                            if(fileInfo.Length < 0x200)
+                            {
+                                MessageBox.Show("Provided BIN is too small to contain valid Screen Data.");
+                                return;
+                            }
+                            else if ((fileInfo.Length % 0x200) != 0)
+                            {
+                                MessageBox.Show("Provided BIN is not a multiple of 200hex bytes");
+                                return;
+                            }
+                            else if(fileInfo.Length > (0x100 * 0x200))
+                            {
+                                MessageBox.Show("Provided BIN is too big to contain valid Screen Data.");
+                                return;
+                            }
+                            PSX.levels[Level.Id].screenData = File.ReadAllBytes(fd.FileName);
+                            Level.ClearInvalidTiles();
+                            undos.Clear();
+                            ScreenEditor.undos.Clear();
+                            PSX.levels[Level.Id].edit = true;
+                            break;
+                        default:
+                            if (fileInfo.Length < 4)
+                            {
+                                MessageBox.Show("Provided BIN is too small to contain valid Tile Data.");
+                                return;
+                            }else if((fileInfo.Length & 3) != 0)
+                            {
+                                MessageBox.Show("Provided BIN is not a multiple of 4 bytes");
+                                return;
+                            }
+                            else if (fileInfo.Length > (4 * 0x4000))
+                            {
+                                MessageBox.Show("Provided BIN is too big to contain valid Tile Data.");
+                                return;
+                            }
+                            PSX.levels[Level.Id].tileInfo = File.ReadAllBytes(fd.FileName);
+                            Level.ClearInvalidTiles();
+                            undos.Clear();
+                            ScreenEditor.undos.Clear();
+                            PSX.levels[Level.Id].edit = true;
+                            break;
+                    }
+                    //Done
+                    MainWindow.window.layoutE.AssignLimits();
+                    MainWindow.window.screenE.AssignLimits();
+                    MainWindow.window.x16E.AssignLimits();
+                    MessageBox.Show("Data Imported!");
+                }
+            }
+        }
+        private void GearOptionExport_Click(object sender, RoutedEventArgs e)
+        {
+            using(var sfd = new System.Windows.Forms.SaveFileDialog())
+            {
+                sfd.Filter = "BIN File|*.bin";
+
+                if(sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string id = (((UIElement)sender).Uid);
+                    byte[] data;
+                    if (id == "l")
+                        data = PSX.levels[Level.Id].layout;
+                    else if (id == "s")
+                        data = PSX.levels[Level.Id].screenData;
+                    else
+                        data = PSX.levels[Level.Id].tileInfo;
+                    File.WriteAllBytes(sfd.FileName, data);
+                    MessageBox.Show("Data Exported!");
+                }
             }
         }
         #endregion Events

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,8 +22,30 @@ namespace TeheManX4.Forms
         public static bool isAnime;
         public static bool checkpoingGo;
         public static bool screenViewOpen;
+        //Screen Viewer
+        public static double screenLeft = double.NaN;
+        public static double screenTop = double.NaN;
+        public static double screenWidth = -1;
+        public static double screenHeight;
+        public static int screenState;
+        //Screen Flags Window
         public static bool extraOpen;
+        public static double extraLeft = double.NaN;
+        public static double extraTop = double.NaN;
+        //Files Viewer
         public static bool fileViewOpen;
+        public static double fileLeft = double.NaN;
+        public static double fileTop = double.NaN;
+        public static double fileWidth = -1;
+        public static double fileHeight;
+        public static int fileState;
+        //Clut Tools
+        public static double clutLeft;
+        public static double clutTop;
+        //TileSet Tools
+        public static double tileLeft = double.NaN;
+        public static double tileTop = double.NaN;
+
         public static string tab = "";
         public static int layoutOffset = 0;
         public static bool enemyOpen;
@@ -36,6 +59,7 @@ namespace TeheManX4.Forms
         public ListWindow(bool single = false) //For viewing Serial Loading
         {
             InitializeComponent();
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.Title = "NOPS Output";
             this.Width = 460;
             this.Height = 400;
@@ -190,6 +214,12 @@ namespace TeheManX4.Forms
             }
             else
             {
+                int clutLength = -1;
+                if (!Level.zeroFlag && PSX.levels[Level.Id].clut_X != null)
+                    clutLength = PSX.levels[Level.Id].clut_X.entries[0].data.Length;
+                else if (Level.zeroFlag && PSX.levels[Level.Id].clut_Z != null)
+                    clutLength = PSX.levels[Level.Id].clut_Z.entries[0].data.Length;
+
                 dt.Tick += (s, e) =>
                 {
                     if ((mode & 1) == 1) //Wait
@@ -233,6 +263,11 @@ namespace TeheManX4.Forms
                             break;
 
                         case 4: //Screen Backup
+                            if(clutLength == -1)
+                            {
+                                mode += 2;
+                                return;
+                            }
                             Settings.nops.CancelOutputRead();
                             PSX.SerialWrite((uint)(Settings.levelSize + Settings.levelStartAddress) + 0x1000, PSX.levels[Level.Id].screenData);
                             this.Title = "Writting Backup Screen DATA";
@@ -393,7 +428,7 @@ namespace TeheManX4.Forms
                             }
 
                         case 28:
-                            if (PSX.levels[Level.Id].GetId() != 0xA)
+                            if (PSX.levels[Level.Id].GetId() != 9 && PSX.levels[Level.Id].GetId() != 0xA)
                             {
                                 if (Level.enemyExpand)
                                 {
@@ -401,8 +436,10 @@ namespace TeheManX4.Forms
                                     break;
                                 }
                                 int indexC = index;
-                                if (PSX.levels[Level.Id].isMid())
+                                if (!PSX.levels[Level.Id].isMid())
                                     indexC++;
+                                if (PSX.levels[Level.Id].arc.filename == "ST0B_0X.ARC")
+                                    index++;
 
                                 Settings.nops.CancelOutputRead();
                                 PSX.SerialWrite(PSX.OffsetToCpu(Const.EnemyDataPointersOffset + indexC * 4), BitConverter.ToInt32(PSX.exe, Const.EnemyDataPointersOffset + indexC * 4));
@@ -416,8 +453,10 @@ namespace TeheManX4.Forms
                         case 30:
                             {
                                 int indexC = index;
-                                if (PSX.levels[Level.Id].isMid())
+                                if (!PSX.levels[Level.Id].isMid())
                                     indexC++;
+                                if (PSX.levels[Level.Id].arc.filename == "ST0B_0X.ARC")
+                                    index++;
 
                                 Settings.nops.CancelOutputRead();
                                 PSX.SerialWrite(PSX.OffsetToCpu(Const.StartEnemyDataPointersOffset + indexC * 4), BitConverter.ToInt32(PSX.exe, Const.StartEnemyDataPointersOffset + indexC * 4));
@@ -568,6 +607,7 @@ namespace TeheManX4.Forms
         public ListWindow(ARC pac) //For Editing PAC files
         {
             InitializeComponent();
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             //Form Prep
             AddGrids(2, 1);
             foreach (var e in pac.entries)
@@ -686,10 +726,134 @@ namespace TeheManX4.Forms
         public ListWindow(ARC arc,int type) //General Textures
         {
             InitializeComponent();
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.Width = 804;
             this.Height = 812;
             int count = 0;
-            for (int i = 0; i < arc.entries.Count; i++)
+            List<Color> grayscalePalette = new List<Color>();
+
+            for (int i = 0; i < 256; i++)
+                grayscalePalette.Add(Color.FromRgb((byte)i, (byte)i, (byte)i));
+            BitmapPalette grayscale8bpp = new BitmapPalette(grayscalePalette);
+            //Create Context Menu
+            ContextMenu contextMenu = new ContextMenu();
+
+            //Specfic Items
+            MenuItem item1 = new MenuItem() { Header = "Swap Bit-Depth" };
+            item1.Click += (send, arg) =>
+            {
+                Image clickedImage = contextMenu.PlacementTarget as Image;
+                int slot = Convert.ToInt32(clickedImage.Uid);
+                ARC filePAC = (ARC)clickedImage.Tag;
+
+                int width;
+                PixelFormat destFormat;
+                BitmapPalette pal;
+                byte[] existingData = new byte[filePAC.entries[slot].data.Length];
+                filePAC.entries[slot].data.CopyTo(existingData, 0);
+
+                if (clickedImage.Source.Width == 256)
+                {
+                    width = 128;
+                    destFormat = PixelFormats.Indexed8;
+                    pal = grayscale8bpp;
+                }
+                else
+                {
+                    width = 256;
+                    destFormat = PixelFormats.Indexed4;
+                    pal = Const.GreyScalePallete;
+                }
+
+                int height = filePAC.entries[slot].data.Length / 128;
+
+                if (width == 256)
+                    Level.ConvertBmp(existingData);
+
+                clickedImage.Source = BitmapSource.Create(width,
+                height,
+                96,
+                96,
+                destFormat,
+                pal,
+                existingData,
+                128);
+            };
+            MenuItem item2 = new MenuItem() { Header = "Show Info" };
+            item2.Click += (send, arg) =>
+            {
+                Image clickedImage = contextMenu.PlacementTarget as Image;
+                string x;
+                string y;
+                string endY;
+                int id = Convert.ToInt32(clickedImage.Name.Replace("_", ""));
+                int endId = (id >> 8) & 0xFF;
+                int cordId = id & 0xFF;
+                int height = (int)clickedImage.Source.Height;
+                if (cordId > Const.CordTabe.Length - 1)
+                {
+                    x = "?";
+                    y = "?";
+                }
+                else
+                {
+                    x = (Const.CordTabe[cordId] & 0xFFFF).ToString();
+                    y = (Const.CordTabe[cordId] >> 16).ToString();
+                }
+
+                if (endId == 0)
+                    endY = "\n(Keeps going til it hits the end of the vertical page)";
+                else if (endId == 1)
+                    endY = "\n(Goes back up after Drawing 176 vertical pixels of the Texture)";
+                else if (endId == 2)
+                    endY = "\n(Goes back up to Y:176 after Drawing 80 vertical pixels)";
+                else
+                    endY = "";
+
+                //Display Info
+                MessageBox.Show("X: " + x + " Y: " + y + $"\nWidth: {clickedImage.Source.Width} Height: " + height + endY, "Texture Info");
+            };
+            MenuItem item3 = new MenuItem() { Header = "Extract" };
+            item3.Click += (send, arg) =>
+            {
+                using(var sfd = new System.Windows.Forms.SaveFileDialog())
+                {
+                    sfd.Title = "Select Texture Save Location";
+                    if (type == 0)
+                        sfd.Filter = "BMP File|*.bmp";
+                    else
+                        sfd.Filter = "BIN File|*.bin";
+
+                    if(sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        Image im = contextMenu.PlacementTarget as Image;
+                        int id = Convert.ToInt32(im.Uid);
+                        ARC filePAC = (ARC)im.Tag;
+
+                        if (type == 0)
+                        {
+                            ImageSource imageSource = im.Source;
+
+                            BitmapEncoder bmpEncoder = new BmpBitmapEncoder();
+                            bmpEncoder.Frames.Add(BitmapFrame.Create((BitmapSource)imageSource));
+
+                            var s = File.Create(sfd.FileName);
+                            bmpEncoder.Save(s);
+                            s.Close();
+                        }
+                        else
+                            File.WriteAllBytes(sfd.FileName, filePAC.entries[id].data);
+
+                        MessageBox.Show("Texture Data Extracted!");
+                    }
+                }
+            };
+
+            contextMenu.Items.Add(item1);
+            contextMenu.Items.Add(item2);
+            contextMenu.Items.Add(item3);
+
+            for (int i = 0; i < arc.entries.Count; i++) //Go Through each Entry
             {
                 if (arc.entries[i].type >> 16 != 1)
                     continue;
@@ -710,10 +874,19 @@ namespace TeheManX4.Forms
                     using (var fd = new System.Windows.Forms.OpenFileDialog())
                     {
                         byte[] data;
+                        var im = (Image)s;
                         if (type == 0)
                         {
-                            fd.Filter = "4bpp BMP |*.BMP";
-                            fd.Title = "Open an 4bpp Bitmap";
+                            if(im.Source.Width == 256)
+                            {
+                                fd.Filter = "4bpp BMP |*.BMP";
+                                fd.Title = "Open an 4bpp Bitmap";
+                            }
+                            else
+                            {
+                                fd.Filter = "8bpp BMP |*.BMP";
+                                fd.Title = "Open an 8bpp Bitmap";
+                            }
                         }
                         else
                         {
@@ -728,22 +901,36 @@ namespace TeheManX4.Forms
                                 WriteableBitmap tex = new WriteableBitmap(new BitmapImage(uri));
                                 Uri.EscapeUriString(fd.FileName);
 
-                                if (tex.PixelWidth != 256)
+                                if (tex.PixelWidth != im.Source.Width)
                                 {
-                                    MessageBox.Show("Texture must\nHave a width of 256 pixels.", "ERROR");
+                                    MessageBox.Show($"Texture must\nHave a width of {im.Source.Width} pixels.", "ERROR");
                                     return;
                                 }
-                                if (tex.Format != PixelFormats.Indexed4)
+
+                                if(im.Source.Width == 256)
                                 {
-                                    MessageBox.Show("Texture must be in 4bpp.", "ERROR");
-                                    return;
+                                    if (tex.Format != PixelFormats.Indexed4)
+                                    {
+                                        MessageBox.Show("Texture must be in 4bpp.", "ERROR");
+                                        return;
+                                    }
                                 }
+                                else
+                                {
+                                    if (tex.Format != PixelFormats.Indexed8)
+                                    {
+                                        MessageBox.Show("Texture must be in 8bpp.", "ERROR");
+                                        return;
+                                    }
+                                }
+
                                 data = new byte[256 * tex.PixelHeight / 2];
                                 tex.CopyPixels(data, 128, 0);
-                                Level.ConvertBmp(data);
+
+                                if(im.Source.Width == 256)
+                                    Level.ConvertBmp(data);
 
                                 //Get PAC Info
-                                var im = (Image)s;
                                 int id = Convert.ToInt32(im.Uid);
                                 ARC filePAC = (ARC)im.Tag;
                                 Array.Resize(ref arc.entries[id].data, data.Length);
@@ -756,7 +943,6 @@ namespace TeheManX4.Forms
                                 data = File.ReadAllBytes(fd.FileName);
 
                                 //Get PAC Info
-                                var im = (Image)s;
                                 var id = Convert.ToInt32(im.Uid);
                                 var filePAC = (ARC)im.Tag;
                                 Array.Resize(ref arc.entries[id].data, data.Length);
@@ -773,35 +959,8 @@ namespace TeheManX4.Forms
                 };
                 MouseButtonEventHandler p2 = (s, e) =>
                 {
-                    string x;
-                    string y;
-                    string endY;
-                    int id = Convert.ToInt32(((Image)s).Name.Replace("_", ""));
-                    int endId = (id >> 8) & 0xFF;
-                    int cordId = id & 0xFF;
-                    int height = (int)((Image)s).Source.Height;
-                    if (cordId > Const.CordTabe.Length - 1)
-                    {
-                        x = "?";
-                        y = "?";
-                    }
-                    else
-                    {
-                        x = (Const.CordTabe[cordId] & 0xFFFF).ToString();
-                        y = (Const.CordTabe[cordId] >> 16).ToString();
-                    }
-
-                    if (endId == 0)
-                        endY = "\n(Keeps going til it hits the end of the vertical page)";
-                    else if (endId == 1)
-                        endY = "\n(Goes back up after Drawing 176 vertical pixels of the Texture)";
-                    else if (endId == 2)
-                        endY = "\n(Goes back up to Y:176 after Drawing 80 vertical pixels)";
-                    else
-                        endY = "";
-                    
-                    //Display Info
-                    MessageBox.Show("X: " + x + " Y: " + y + "\nWidth: 256 Height: " + height + endY, "Texture Info");
+                    contextMenu.PlacementTarget = s as Image;
+                    contextMenu.IsOpen = true;
                 };
                 image.MouseLeftButtonDown += p1;
                 image.MouseRightButtonDown += p2;
@@ -813,8 +972,8 @@ namespace TeheManX4.Forms
                 byte[] p = new byte[arc.entries[i].data.Length];
                 Array.Copy(arc.entries[i].data, p, p.Length);
                 Level.ConvertBmp(p);
-                var pal = new BitmapPalette(Const.GreyScale);
-                var bmp = new WriteableBitmap(256, p.Length / 128, 96, 96, PixelFormats.Indexed4, pal);
+
+                var bmp = new WriteableBitmap(256, p.Length / 128, 96, 96, PixelFormats.Indexed4, Const.GreyScalePallete);
                 bmp.WritePixels(new Int32Rect(0, 0, 256, p.Length / 128), p, 128, 0);
                 //Add to Window
                 image.Source = bmp;
@@ -843,6 +1002,20 @@ namespace TeheManX4.Forms
             this.Height = 934;
             this.Title = "All Screens in Layer " + (Level.BG + 1);
             this.scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            if(screenWidth != -1)
+            {
+                this.Left = screenLeft;
+                this.Top = screenTop;
+                this.Width = screenWidth;
+                this.Height = screenHeight;
+                if(this.WindowState != (WindowState)screenState)
+                {
+                    this.Loaded += (s, e) =>
+                    {
+                        this.WindowState = (WindowState)screenState;
+                    };
+                }
+            }
             this.AddGrids(PSX.levels[Level.Id].width, PSX.levels[Level.Id].height);
 
             //Add Buttons to Grid
@@ -953,6 +1126,11 @@ namespace TeheManX4.Forms
             this.Height = 646;
             this.Title = "Screen: " + Convert.ToString(MainWindow.window.screenE.screenId, 16).ToUpper() + " Tile Flags";
             this.ResizeMode = ResizeMode.CanMinimize;
+            if (!double.IsNaN(extraLeft))
+            {
+                this.Left = extraLeft;
+                this.Top = extraTop;
+            }
 
             //Add Top Bar Controls
             DockPanel dock = new DockPanel();
@@ -1028,16 +1206,270 @@ namespace TeheManX4.Forms
                 Content = "Show Collision",
                 Width = 115,
                 Style = Application.Current.FindResource("TileButton") as Style
-            };
+            }; //Show Collision
             bt4.Click += (s, e) =>
             {
                 MainWindow.window.ToggleCollision();
+            };
+            Button bt5 = new Button()
+            {
+                Content = "Tilesets",
+                Width = 70,
+                Style = Application.Current.FindResource("TileButton") as Style
+            };
+            bt5.Click += (s, e) =>
+            {
+                if(MainWindow.window.screenE.screenCursor.Visibility == Visibility.Hidden)
+                {
+                    MessageBox.Show("You must select a group of tiles in the current screen " +
+                        "to be able to use these tile-set tools.");
+                    return;
+                }
+
+                ListWindow tileWin = new ListWindow();
+                tileWin.ResizeMode = ResizeMode.NoResize;
+                tileWin.Title = "Export Tileset";
+                tileWin.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                tileWin.Height = 375;
+                if (!double.IsNaN(tileLeft))
+                {
+                    tileWin.Left = tileLeft;
+                    tileWin.Top = tileTop;
+                }
+                tileWin.Closing += (ss, ee) =>
+                {
+                    tileLeft = tileWin.Left;
+                    tileTop = tileWin.Top;
+                };
+                CheckBox includeStructCheck = new CheckBox()
+                {
+                    Content = "Include Struct",
+                    FontSize = 16,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                };
+
+                CheckBox includeTableCheck = new CheckBox()
+                {
+                    Content = "Include Tile Table",
+                    FontSize = 16,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                    IsChecked = true
+                };
+                CheckBox infoCheck = new CheckBox()
+                {
+                    Content = "Include Info",
+                    FontSize = 16,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                    IsChecked = true
+                };
+                Label nameLbl = new Label()
+                {
+                    Content = "Base Name",
+                    FontSize = 18,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                TextBox nameBox = new TextBox()
+                {
+                    Text = PSX.levels[Level.Id].arc.filename.Replace(".ARC", ""),
+                    FontSize = 18,
+                    HorizontalContentAlignment = HorizontalAlignment.Center
+                };
+                Label labelX = new Label()
+                {
+                    Content = "Base X",
+                    FontSize = 18,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                NumInt intX = new NumInt()
+                {
+                    ShowButtonSpinner = false,
+                    FontSize = 18,
+                    TextAlignment = TextAlignment.Center
+                };
+                Label labelY = new Label()
+                {
+                    Content = "Base Y",
+                    FontSize = 18,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                NumInt intY = new NumInt()
+                {
+                    ShowButtonSpinner = false,
+                    FontSize = 18,
+                    TextAlignment = TextAlignment.Center
+                };
+                Label layerLbl = new Label()
+                {
+                    Content = "Layer",
+                    FontSize = 18,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                NumInt layerInt = new NumInt()
+                {
+                    ShowButtonSpinner = false,
+                    FontSize = 18,
+                    TextAlignment = TextAlignment.Center
+                };
+
+                string str;
+
+                Button export = new Button()
+                {
+                    Content = "Export as C"
+                };
+                export.Click += (sen, arg) =>
+                {
+                    if (intX.Value == null || intY.Value == null || layerInt.Value == null)
+                    {
+                        MessageBox.Show("Invalid Parameters", "ERROR");
+                        return;
+                    }
+                    using (var sfd = new System.Windows.Forms.SaveFileDialog())
+                    {
+                        sfd.FileName = $"{nameBox.Text}.c";
+                        sfd.Title = "Select Tileset Save Location";
+                        sfd.Filter = "C Source File |*.c";
+                        if(sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            int scX = Grid.GetColumn(MainWindow.window.screenE.screenCursor);
+                            int scY = Grid.GetRow(MainWindow.window.screenE.screenCursor);
+                            int cols = Grid.GetColumnSpan(MainWindow.window.screenE.screenCursor);
+                            int rows = Grid.GetRowSpan(MainWindow.window.screenE.screenCursor);
+                            str = Level.CreateTilesetString((int)intX.Value, (int)intY.Value, scX, scY, cols, rows, (byte)(int)layerInt.Value, (bool)includeStructCheck.IsChecked, (bool)includeTableCheck.IsChecked, nameBox.Text, (bool)infoCheck.IsChecked);
+
+                            File.WriteAllText(sfd.FileName, str);
+                            MessageBox.Show("Tileset Exported!");
+                        }
+                    }
+                };
+
+                Button clipboardC = new Button()
+                {
+                    Content = "Copy to Clipboard as C"
+                };
+                clipboardC.Click += (sen, arg) =>
+                {
+                    if(intX.Value == null || intY.Value == null || layerInt.Value == null)
+                    {
+                        MessageBox.Show("Invalid Parameters", "ERROR");
+                        return;
+                    }
+                    int scX = Grid.GetColumn(MainWindow.window.screenE.screenCursor);
+                    int scY = Grid.GetRow(MainWindow.window.screenE.screenCursor);
+                    int cols = Grid.GetColumnSpan(MainWindow.window.screenE.screenCursor);
+                    int rows = Grid.GetRowSpan(MainWindow.window.screenE.screenCursor);
+                    str = Level.CreateTilesetString((int)intX.Value, (int)intY.Value, scX, scY, cols, rows, (byte)(int)layerInt.Value, (bool)includeStructCheck.IsChecked, (bool)includeTableCheck.IsChecked, nameBox.Text, (bool)infoCheck.IsChecked);
+                    Clipboard.SetDataObject(str);
+                    //File.WriteAllText("Test.txt", str);
+                };
+
+                tileWin.pannel.Children.Add(export);
+                tileWin.pannel.Children.Add(clipboardC);
+                tileWin.pannel.Children.Add(nameLbl);
+                tileWin.pannel.Children.Add(nameBox);
+                tileWin.pannel.Children.Add(labelX);
+                tileWin.pannel.Children.Add(intX);
+                tileWin.pannel.Children.Add(labelY);
+                tileWin.pannel.Children.Add(intY);
+                tileWin.pannel.Children.Add(layerLbl);
+                tileWin.pannel.Children.Add(layerInt);
+
+                tileWin.outGrid.RowDefinitions.Add(new RowDefinition());
+                tileWin.outGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto});
+
+                StackPanel stackP = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                stackP.Children.Add(includeStructCheck);
+                stackP.Children.Add(includeTableCheck);
+                stackP.Children.Add(infoCheck);
+                Grid.SetRow(stackP, 1);
+
+                tileWin.outGrid.Children.Add(stackP);
+
+                if (!double.IsNaN(tileLeft))
+                {
+                    tileWin.Left = tileLeft;
+                    tileWin.Top = tileTop;
+                }
+
+                tileWin.ShowDialog();
             };
 
             dock.Children.Add(bt1);
             dock.Children.Add(bt2);
             dock.Children.Add(bt3);
             dock.Children.Add(bt4);
+            dock.Children.Add(bt5);
+
+            Button texBtn = new Button()
+            {
+                Content = "8bpp Texture",
+                Width = 105,
+                Style = Application.Current.FindResource("TileButton") as Style
+            };
+            texBtn.Click += (s, e) =>
+            {
+                if (Level.textureSupport)
+                {
+                    MessageBox.Show("You already have the 8bpp Texture patch applied to the game.\nIf you want to use 8bpp textures just set the " +
+                        "tile's T-page property to 8-B");
+                    return;
+                }
+                else
+                {
+                    var result = MessageBox.Show("Would you like to apply the 8bpp Texture patch? " +
+                        "Normally MegaMan X4 only supports 4bpp Textures for the Background Layers 1-3. " +
+                        "This patch will allow you to use 8bpp Textures similarly to how MegaMan X5/X6 Support 8bpp Textures.\n" +
+                        "This  will also expand the max amount of colors to 8192 (0x200 sets), " +
+                        "however I would only set it to 0x140 sets at most. " +
+                        "Would you like to apply the patch?", "8bpp Texture Patch" , MessageBoxButton.YesNo);
+                    if (result != MessageBoxResult.Yes) return;
+
+                    System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+
+                    Stream resourceStream = assembly.GetManifestResourceStream("TeheManX4.Resources.Patches.Texture_8bpp.drawbackgroundc.bin");
+                    MemoryStream ms = new MemoryStream();
+
+                    resourceStream.CopyTo(ms);
+                    ms.ToArray().CopyTo(PSX.exe, PSX.CpuToOffset(0x80026648));
+
+                    resourceStream = assembly.GetManifestResourceStream("TeheManX4.Resources.Patches.Texture_8bpp.setuppagesc.bin");
+                    ms = new MemoryStream();
+
+                    resourceStream.CopyTo(ms);
+                    ms.ToArray().CopyTo(PSX.exe, PSX.CpuToOffset(0x80025da0));
+
+                    System.Text.Encoding.ASCII.GetBytes("TEXTURE_8BPP").CopyTo(PSX.exe, PSX.CpuToOffset(0x800260e4));
+                    byte[] clutRECT = new byte[] { 0, 0, 0xE0, 1, 0, 1, 0x20, 0 };
+                    clutRECT.CopyTo(PSX.exe, PSX.CpuToOffset(0x800f1658));
+
+                    //Update GUI
+                    MainWindow.window.screenE.pageInt.Maximum = 0xB;
+                    MainWindow.window.x16E.pageInt.Maximum = 0xB;
+                    ClutEditor.maxPage = 0xB;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ((Button)MainWindow.window.x16E.tPagePannel.Children[9 + i]).Visibility = Visibility.Visible;
+                        ((Button)MainWindow.window.clutE.pagePannel.Children[9 + i]).Visibility = Visibility.Visible;
+                    }
+                    PSX.edit = true;
+                    Level.textureSupport = true;
+
+                    //Done
+                    MessageBox.Show("8bpp Texture patch has been applied! Now hit the save and now when you want to use 8bpp Textures " +
+                        $"set the tile's T-page property to 8-B. " +
+                        "Also keep in mind that if the T-page property is set to 8-B the Clut property should be a multiple of " +
+                        "10hex and should be no greater than 30hex (cause of the Clut layout in VRAM). " +
+                        "Lastly if you want to change amount of colors in a level " +
+                        " set the the clut set count in the size window.\n" +
+                        $" You can also view the patch source at {Const.texture8bppURL}");
+                }
+            };
+            dock.Children.Add(texBtn);
+
             dock.Children.Add(rect);
             this.pannel.Children.Insert(0, dock);
 
@@ -1161,6 +1593,7 @@ namespace TeheManX4.Forms
             this.MaxWidth = 785;
             this.MinWidth = 785;
             this.Height = 585;
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
             //Rows
             this.outGrid.RowDefinitions.Add(new RowDefinition());
@@ -1202,7 +1635,7 @@ namespace TeheManX4.Forms
                 Width = 90,
                 Height = 40,
                 FontSize = 20,
-                Margin = new Thickness(5, 2, 20, 0),
+                Margin = new Thickness(5, 2, 5, 0),
                 Content = "Remove"
             };
             rmvBtn.Click += (s, e) =>
@@ -1227,10 +1660,10 @@ namespace TeheManX4.Forms
             //Add
             Button addBtn = new Button()
             {
-                Width = 70,
+                Width = 50,
                 Height = 40,
                 FontSize = 20,
-                Margin = new Thickness(5, 2, 10, 0),
+                Margin = new Thickness(5, 2, 5, 0),
                 Content = "Add"
             };
             addBtn.Click += (s, e) =>
@@ -1242,13 +1675,14 @@ namespace TeheManX4.Forms
                 PSX.edit = true;
             };
 
+            //Expand
             Button expan = new Button()
             {
-                Width = 155,
+                Width = 130,
                 Height = 40,
                 FontSize = 20,
-                Margin = new Thickness(5, 2, 10, 0),
-                Content = "Expand Enemies"
+                Margin = new Thickness(5, 2, 5, 0),
+                Content = "Expand Patch"
             };
             expan.Click += (s, e) =>
             {
@@ -1336,7 +1770,7 @@ namespace TeheManX4.Forms
                 Width = 100,
                 Height = 40,
                 FontSize = 20,
-                Margin = new Thickness(5, 2, 20, 0),
+                Margin = new Thickness(5, 2, 5, 0),
                 Content = "Delete All"
             };
             delete.Click += (s, e) =>
@@ -1353,6 +1787,67 @@ namespace TeheManX4.Forms
                 }
             };
 
+            //Export
+            Button export = new Button()
+            {
+                Width = 75,
+                Height = 40,
+                FontSize = 20,
+                Margin = new Thickness(5, 2, 5, 0),
+                Content = "Export"
+            };
+            export.Click += (s, e) =>
+            {
+                using(var sfd = new System.Windows.Forms.SaveFileDialog())
+                {
+                    sfd.Filter = "JSON File|*.json";
+                    sfd.Title = "Select the JSON Export Location for the regular & start Enemy Data";
+                    if(sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        EnemyCollection collection = new EnemyCollection();
+                        collection.enemies = PSX.levels[Level.Id].enemies;
+                        collection.startEnemies = PSX.levels[Level.Id].startEnemies;
+
+                        string json = JsonConvert.SerializeObject(collection, Formatting.Indented);
+                        File.WriteAllText(sfd.FileName, json);
+                        MessageBox.Show("Regular and Start Enemy Data Exported!");
+                        Close();
+                    }
+                }
+            };
+
+            //Import
+            Button import = new Button()
+            {
+                Width = 75,
+                Height = 40,
+                FontSize = 20,
+                Margin = new Thickness(5, 2, 5, 0),
+                Content = "Import"
+            };
+            import.Click += (s, e) =>
+            {
+                using (var fd = new System.Windows.Forms.OpenFileDialog())
+                {
+                    fd.Filter = "JSON |*json";
+                    fd.Title = "Select the JSON file contaning the regular & start Enemy Data";
+                    if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        EnemyCollection collection = JsonConvert.DeserializeObject<EnemyCollection>(File.ReadAllText(fd.FileName));
+                        PSX.levels[Level.Id].startEnemies = collection.startEnemies;
+                        PSX.levels[Level.Id].enemies = collection.enemies;
+
+                        MessageBox.Show("Regular and Start Enemy Data Imported!");
+                        MainWindow.window.enemyE.DrawEnemies();
+                        
+                        PSX.levels[Level.Id].edit = true;
+
+                        if (Level.enemyExpand) PSX.levels[Level.Id].edit = true;
+                        Close();
+                    }
+                }
+            };
+
             StackPanel stackP = new StackPanel()
             {
                 Orientation = Orientation.Horizontal,
@@ -1362,6 +1857,8 @@ namespace TeheManX4.Forms
 
             stackP.Children.Add(nameLbl);
             stackP.Children.Add(expan);
+            stackP.Children.Add(export);
+            stackP.Children.Add(import);
             stackP.Children.Add(delete);
             stackP.Children.Add(rmvBtn);
             stackP.Children.Add(addBtn);
@@ -1378,6 +1875,20 @@ namespace TeheManX4.Forms
             this.MaxWidth = 290;
             this.MinWidth = 290;
             fileViewOpen = true;
+            if (fileWidth != -1)
+            {
+                this.Left = fileLeft;
+                this.Top = fileTop;
+                this.Width = fileWidth;
+                this.Height = fileHeight;
+                if (this.WindowState != (WindowState)fileState)
+                {
+                    this.Loaded += (s, e) =>
+                    {
+                        this.WindowState = (WindowState)fileState;
+                    };
+                }
+            }
             int i = 0;
             foreach (var l in PSX.levels)
             {
@@ -1398,15 +1909,36 @@ namespace TeheManX4.Forms
         private void ClutTools()
         {
             this.Title = "CLUT TOOLS";
-            this.Height = 200;
+
             this.ResizeMode = ResizeMode.NoResize;
             this.scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-
+            if (!double.IsNaN(clutLeft))
+            {
+                this.Left = clutLeft;
+                this.Top = clutTop;
+            }
             int id;
             if (isAnime)
                 id = AnimeEditor.clut;
             else
                 id = ClutEditor.clut;
+
+            Label exportLbl = new Label()
+            {
+                Content = "Export Set Count",
+                FontSize = 18,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            NumInt exportInt = new NumInt()
+            {
+                Value = 1,
+                FontSize = 18,
+                Minimum = 1,
+                Maximum = 128,
+                ShowButtonSpinner = false,
+                TextAlignment = TextAlignment.Center
+            };
+            int exportCount = 1;
 
             //Create Tool Buttons
             Button cpyBackground = new Button()
@@ -1700,8 +2232,10 @@ namespace TeheManX4.Forms
                     if(sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
                         string lines = null;
+                        if (exportInt.Value != null)
+                            exportCount = (int)exportInt.Value;
 
-                        for (int i = 0; i < 16; i++)
+                        for (int i = 0; i < exportCount * 16; i++)
                         {
                             int color;
 
@@ -1736,10 +2270,16 @@ namespace TeheManX4.Forms
             {
                 pannel.Children.Add(cpyBackground);
                 pannel.Children.Add(cpyObject);
+                Height = 255;
             }
+            else
+                Height = 192;
+
             pannel.Children.Add(importSet);
             pannel.Children.Add(importPAL);
             pannel.Children.Add(exportSet);
+            pannel.Children.Add(exportLbl);
+            pannel.Children.Add(exportInt);
         }
         private void CheckpointEdit()
         {
@@ -1749,6 +2289,7 @@ namespace TeheManX4.Forms
             this.Width = 300;
             this.MaxWidth = 300;
             this.MinWidth = 300;
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             int pastIndex = -1;
 
 
@@ -1868,6 +2409,7 @@ namespace TeheManX4.Forms
             this.Width = 300;
             this.MaxWidth = 300;
             this.Height = 420;
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.Title = "Camera";
 
             int pastIndex = -1;
@@ -1985,7 +2527,8 @@ namespace TeheManX4.Forms
                 Settings.DefineBoxes();
                 MessageBox.Show("Camera Setting Sizes Edited!");
                 MainWindow.window.camE.SetupCheckValues();
-                this.Close();
+                MainWindow.window.enemyE.UpdateTriggers();
+                Close();
             };
 
             Grid.SetRow(confirm, 1);
@@ -2098,31 +2641,6 @@ namespace TeheManX4.Forms
                 }
             }
         }
-        public void CompressedTextures(ARC arc)
-        {
-            const int frame = 0;
-            InitializeComponent();
-            this.Width = 696;
-            this.Height = 696;
-            byte[] entryData = arc.LoadEntry(2);
-            byte[] pixels = new byte[0x8000];
-            int start = BitConverter.ToInt32(entryData, 0);
-            int width = 256;
-            int tileCount = BitConverter.ToInt32(entryData, start + frame * 4) >> 0x14;
-
-
-
-            Level.DecompressTexture(entryData, pixels, (BitConverter.ToInt32(entryData,start + frame * 4) & 0xFFFFF) + start);
-            Level.ConvertBmp(pixels);
-
-
-            BitmapPalette pal = new BitmapPalette(Const.GreyScale);
-            WriteableBitmap display = new WriteableBitmap(256, 256, 96, 96, PixelFormats.Indexed4, pal);
-            Image image = new Image();
-            display.WritePixels(new Int32Rect(0, 0, width, 256), pixels, 128, 0);
-            image.Source = display;
-            pannel.Children.Add(image);
-        }
         #endregion Methods
 
         #region Events
@@ -2132,11 +2650,18 @@ namespace TeheManX4.Forms
             {
                 case 0: //Layout Viewer
                     screenViewOpen = false;
+                    screenLeft = this.Left;
+                    screenTop = this.Top;
+                    screenWidth = this.Width;
+                    screenHeight = this.Height;
+                    screenState = (int)this.WindowState;
                     break;
                 case -1:
                     break;
                 case -2:
                     extraOpen = false;
+                    extraLeft = this.Left;
+                    extraTop = this.Top;
                     break;
 
                 case -3: //Enemy Tools
@@ -2162,6 +2687,15 @@ namespace TeheManX4.Forms
                     break;
                 case -4:
                     fileViewOpen = false;
+                    fileLeft = this.Left;
+                    fileTop = this.Top;
+                    fileWidth = this.Width;
+                    fileHeight = this.Height;
+                    fileState = (int)this.WindowState;
+                    break;
+                case -5:
+                    clutLeft = this.Left;
+                    clutTop = this.Top;
                     break;
                 default:
                     break;

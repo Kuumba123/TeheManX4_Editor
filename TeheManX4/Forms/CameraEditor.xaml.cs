@@ -311,6 +311,10 @@ namespace TeheManX4.Forms
                 PSX.edit = true;
             }
         }
+        private void UpdateTrigger_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow.window.enemyE.UpdateTriggers();
+        }
         #endregion Events
     }
 }

@@ -57,7 +57,7 @@
         </Grid>
 
         <StackPanel Grid.Column="1">
-            <WrapPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" x:Name="tPagePannel">
                 <Label Foreground="White" FontSize="18" FontFamily="Consolas">T-Page</Label>
                 <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">0</Button>
                 <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">1</Button>
@@ -67,8 +67,12 @@
                 <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">5</Button>
                 <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">6</Button>
                 <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">7</Button>
-                <Button Style="{StaticResource TileButton}" x:Name="palBtn" Padding="4,4,7,4" Width="76">CLUT: 00</Button>
-            </WrapPanel>
+                <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">8</Button>
+                <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">9</Button>
+                <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">A</Button>
+                <Button Style="{StaticResource TileButton}" Click="TpageButton_Click">B</Button>
+                <Button Style="{StaticResource TileButton}" x:Name="palBtn" Padding="4,4,7,4" Width="76" Click="palBtn_Click">CLUT: 00</Button>
+            </StackPanel>
             <Border Grid.RowSpan="16" Grid.ColumnSpan="16" BorderBrush="White" BorderThickness="2" HorizontalAlignment="Left" Margin="0">
                 <Grid x:Name="textureGrid">
                     <Grid.ColumnDefinitions>
@@ -169,6 +173,9 @@
                     <local:NumInt x:Name="colInt" FontSize="18" Minimum="0" Maximum="#3F" Width="60" ValueChanged="colInt_ValueChanged"/>
                 </StackPanel>
             </WrapPanel>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Button Width="30" Height="30" Margin="5" Click="GearBtn_Click">⚙️</Button>
         </StackPanel>
     </Grid>
 </UserControl>

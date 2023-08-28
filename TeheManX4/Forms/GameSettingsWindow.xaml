@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TeheManX4.Forms"
         mc:Ignorable="d"
-        Title="Game Settings" Height="370" Width="360" MaxWidth="360" MinWidth="360">
+        Title="Game Settings" Height="370" Width="360" MaxWidth="360" MinWidth="360" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <ResourceDictionary>
             <Style TargetType="Label">

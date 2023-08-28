@@ -36,92 +36,8 @@
         <!--Clut Info-->
         <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="16" BorderBrush="White" BorderThickness="2" HorizontalAlignment="Left" Margin="0">
             <ScrollViewer  Focusable="False" >
-                <Canvas Width="256" Height="1024">
-                    <Grid x:Name="clutGrid" Height="1024"  Width="256">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                            <ColumnDefinition Width="auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                        </Grid.RowDefinitions>
+                <Canvas x:Name="clutCanvas" Width="256" Height="1024">
+                    <Grid x:Name="clutGrid"  Width="256">
                     </Grid>
                     <Rectangle x:Name="cursor" Width="256" Height="16" Canvas.Top="0" Canvas.Left="0"  IsHitTestVisible="False" Grid.Row="#18" Stroke="PapayaWhip"  StrokeThickness="2.5" StrokeDashArray="2 2"></Rectangle>
                 </Canvas>
@@ -138,6 +54,10 @@
             <Button Style="{StaticResource TileButton}" Click="Tpage_Click">5</Button>
             <Button Style="{StaticResource TileButton}" Click="Tpage_Click">6</Button>
             <Button Style="{StaticResource TileButton}" Click="Tpage_Click">7</Button>
+            <Button Style="{StaticResource TileButton}" Click="Tpage_Click">8</Button>
+            <Button Style="{StaticResource TileButton}" Click="Tpage_Click">9</Button>
+            <Button Style="{StaticResource TileButton}" Click="Tpage_Click">A</Button>
+            <Button Style="{StaticResource TileButton}" Click="Tpage_Click">B</Button>
             <Button Style="{StaticResource TileButton}" x:Name="palBtn" Click="palBtn_Click" Padding="4,4,7,4" Width="76">CLUT: 00</Button>
             <Button Style="{StaticResource TileButton}" Click="GearBtn_Click">⚙️</Button>
         </StackPanel>

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TeheManX4.Forms"
         Background="Black"
         mc:Ignorable="d"
-        Title="TeheMan X4 Sprite Editor" Height="800" Width="1340" ResizeMode="CanMinimize">
+        Title="TeheMan X4 Sprite Editor" Height="800" Width="1340" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
     <Window.Resources>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="White"/>

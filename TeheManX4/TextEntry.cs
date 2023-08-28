@@ -6,7 +6,7 @@ namespace TeheManX4
     class TextEntry
     {
         #region Properties
-        public bool boxHigh;
+        public bool boxLow;
         public List<Box> boxes = new List<Box>();
         #endregion Properties
 
@@ -29,6 +29,7 @@ namespace TeheManX4
                 {
                     ushort data = br.ReadUInt16();
                     bw.Write(data);
+
                     if ((data & 0x8000) == 0x8000) //End Text
                     {
                         end = true;
@@ -63,7 +64,7 @@ namespace TeheManX4
 
                     if (!check)
                     {
-                        if (boxHigh)
+                        if (boxLow)
                             data |= 0x800;
                     }
 
