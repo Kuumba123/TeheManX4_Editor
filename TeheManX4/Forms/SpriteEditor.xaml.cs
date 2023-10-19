@@ -34,14 +34,73 @@ namespace TeheManX4.Forms
         byte[] texCordData;
         #endregion Properties
 
+        #region Fields
+        public static bool is1X;
+        #endregion Fields
+
         #region Constructors
         public SpriteEditor()
         {
             InitializeComponent();
+            SetSize();
         }
         #endregion Constructors
 
         #region Methods
+        private void SetSize()
+        {
+            if (!is1X)
+            {
+                this.Width = 1340;
+                this.Height = 800;
+                this.canvas.Width = 512;
+                this.canvas.Height = 512;
+                this.renderImg.Width = 512;
+                this.renderImg.Height = 512;
+                this.renderBorder.Width = 520;
+                this.renderBorder.Height = 520;
+                this.renderColumn.Width = GridLength.Auto;
+                outline.Width = 32;
+                outline.Height = 32;
+                renderSizeBtn.Content = "2X";
+                textureScrollBar.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            }
+            else
+            {
+                this.Width = 1340 - 200;
+                this.Height = 800 - 200;
+                this.canvas.Width = 256;
+                this.canvas.Height = 256;
+                this.renderImg.Width = 256;
+                this.renderImg.Height = 256;
+                this.renderBorder.Width = 265;
+                this.renderBorder.Height = 265;
+                this.renderColumn.Width = new GridLength(530);
+                outline.Width = 16;
+                outline.Height = 16;
+                renderSizeBtn.Content = "1X";
+                textureScrollBar.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            }
+            UpdateOutline();
+        }
+        private void UpdateOutline()
+        {
+            if ((bool)outCheck.IsChecked)
+            {
+                int scale;
+                if (is1X)
+                    scale = 1;
+                else
+                    scale = 2;
+                int x = (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].x + 128) * scale;
+                int y = (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].y + 128) * scale;
+                outline.Visibility = Visibility.Visible;
+                Canvas.SetLeft(outline, x);
+                Canvas.SetTop(outline, y);
+            }
+            else
+                outline.Visibility = Visibility.Hidden;
+        }
         private unsafe void DrawSprite(bool clear = false)
         {
             if (!clear)
@@ -120,16 +179,7 @@ namespace TeheManX4.Forms
                     }
                 }
             }
-            if ((bool)outCheck.IsChecked)
-            {
-                int x = (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].x + 128) * 2;
-                int y = (spriteSlots[slotId].frames[frameId].quads[(int)quadInt.Value].y + 128) * 2;
-                outline.Visibility = Visibility.Visible;
-                Canvas.SetLeft(outline, x);
-                Canvas.SetTop(outline, y);
-            }
-            else
-                outline.Visibility = Visibility.Hidden;
+            UpdateOutline();
 
             //End
             outputBmp.AddDirtyRect(new Int32Rect(0, 0, outputBmp.PixelWidth, outputBmp.PixelHeight));
@@ -734,6 +784,14 @@ namespace TeheManX4.Forms
             HelpWindow h = new HelpWindow(4);
             h.ShowDialog();
         }
+        private void SizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (is1X)
+                is1X = false;
+            else
+                is1X = true;
+            SetSize();
+        }
         private void CreateButton_Click(object sender, RoutedEventArgs e)
         {
             mode = 2;
@@ -814,7 +872,6 @@ namespace TeheManX4.Forms
                 textureImg.Source = textureBmp;
             }
         }
-
         private void frameInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue == null || e.OldValue == null)
@@ -845,7 +902,6 @@ namespace TeheManX4.Forms
                 MessageBox.Show(ex.Message, "ERROR");
             }
         }
-
         private void slotInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue == null || e.OldValue == null)
@@ -942,7 +998,6 @@ namespace TeheManX4.Forms
             spriteSlots.Add(new Sprite() { cord = (int)freeInt.Value });
             slotInt.Maximum = spriteSlots.Count - 1;
         }
-
         private void rmvSlotBtn_Click(object sender, RoutedEventArgs e)
         {
             if(slotInt.Maximum == 0)
@@ -1152,7 +1207,6 @@ namespace TeheManX4.Forms
                 quadCordInt.Value = (page << 8) + cX + ((cY & 0xF) << 4);
             }
         }
-
         private void cordInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue == null || e.OldValue == null)
@@ -1187,7 +1241,6 @@ namespace TeheManX4.Forms
                 DrawSprite();
             }
         }
-
         private void yInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue == null || e.OldValue == null || !enable) return;
@@ -1207,7 +1260,6 @@ namespace TeheManX4.Forms
                 DrawSprite();
             }
         }
-
         private void clutInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue == null || e.OldValue == null || !enable) return;
@@ -1230,7 +1282,6 @@ namespace TeheManX4.Forms
                 DrawSprite();
             }
         }
-
         private void quadInt_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue == null || e.OldValue == null || !enable) return;
@@ -1239,6 +1290,7 @@ namespace TeheManX4.Forms
             {
                 UpdateSpriteInfo();
                 UpdateTexCursor();
+                UpdateOutline();
             }
         }
 

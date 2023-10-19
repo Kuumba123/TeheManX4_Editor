@@ -36,8 +36,9 @@
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
+            <!--set column name for 1X/2X-->
+            <ColumnDefinition x:Name="renderColumn" Width="530"/>
             <ColumnDefinition/>
-            <ColumnDefinition Width="540"/>
             <ColumnDefinition Width="256"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -51,6 +52,7 @@
             <Button Width="110" Style="{StaticResource TileButton}" Click="ExportFramesButton_Click">Export Frames</Button>
             <Button Width="110" Style="{StaticResource TileButton}" Click="ExportArcButton_Click">Export to ARC</Button>
             <Button Width="50" Style="{StaticResource TileButton}" Click="HelpButton_Click">Help</Button>
+            <Button Width="30" Style="{StaticResource TileButton}" x:Name="renderSizeBtn" Click="SizeButton_Click">1X</Button>
         </DockPanel>
         
         <!--Rendered FRAME & Tile Tools-->
@@ -60,7 +62,7 @@
                 <RowDefinition Height="85"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
-            <Border  BorderBrush="White" BorderThickness="4">
+            <Border x:Name="renderBorder" Width="520" Height="520" BorderBrush="White" BorderThickness="4">
                 <Canvas x:Name="canvas" Width="512" Height="512">
                     <Image Width="512" Height="512"  Name="renderImg"></Image>
                     <Rectangle x:Name="outline" Width="32" Height="32" Visibility="Hidden" StrokeThickness="2.5" StrokeDashArray="2 2"  Stroke="#AFFF0000"></Rectangle>
@@ -101,7 +103,7 @@
             <Label Height="40">Quad:</Label>
             <local:NumInt IsEnabled="False" Height="40" ValueChanged="quadInt_ValueChanged" Width="50" Minimum="0" x:Name="quadInt" Maximum="#FF"></local:NumInt>
         </StackPanel>
-        <ScrollViewer Grid.Row="1" Grid.Column="1">
+        <ScrollViewer x:Name="textureScrollBar" Grid.Row="1" Grid.Column="1" HorizontalScrollBarVisibility="Visible">
             <Canvas Width="512" Height="3520">
                 <Image x:Name="textureImg" Width="512" MouseRightButtonUp="textureImg_MouseRightButtonUp" MouseLeftButtonUp="textureImg_MouseLeftButtonUp"></Image>
                 <Rectangle Visibility="Hidden" x:Name="tileCursor" Width="32" Height="32" IsHitTestVisible="False" StrokeThickness="2.5" StrokeDashArray="2 2"  Stroke="#AFFF0000"></Rectangle>
@@ -208,7 +210,7 @@
         <Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <StackPanel>

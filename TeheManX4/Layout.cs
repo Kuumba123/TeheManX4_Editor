@@ -41,6 +41,8 @@ namespace TeheManX4
         public bool soundToolsOpen;
         public bool isoToolsOpen;
         public bool otherToolsOpen;
+        //Sprite Window
+        public bool is1X;
     }
     class WindowLayout
     {

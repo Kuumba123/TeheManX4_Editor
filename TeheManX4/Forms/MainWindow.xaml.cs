@@ -108,6 +108,8 @@ namespace TeheManX4
                     ToolsWindow.textureToolsOpen = layout.textureToolsOpen;
                     ToolsWindow.soundToolsOpen = layout.soundToolsOpen;
                     ToolsWindow.otherToolsOpen = layout.otherToolsOpen;
+
+                    SpriteEditor.is1X = layout.is1X;
                 }
                 LockWindows();
 
@@ -1071,6 +1073,8 @@ namespace TeheManX4
             layout.soundToolsOpen = ToolsWindow.soundToolsOpen;
             layout.isoToolsOpen = ToolsWindow.isoToolsOpen;
             layout.otherToolsOpen = ToolsWindow.otherToolsOpen;
+
+            layout.is1X = SpriteEditor.is1X;
 
             foreach (Window childWind in Application.Current.Windows)
             {
