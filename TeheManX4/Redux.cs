@@ -15,12 +15,12 @@ namespace TeheManX4
         #region Methods
         static async internal Task Pause()
         {
-            HttpResponseMessage response = await client.PostAsync("http://127.0.0.1:" + MainWindow.settings.webPort + "/api/v1/execution-flow?function=<pause>&type=-", null);
+            HttpResponseMessage response = await client.PostAsync("http://127.0.0.1:" + MainWindow.settings.webPort + "/api/v1/execution-flow?function=pause", null);
             response.EnsureSuccessStatusCode();
         }
         static async internal Task Resume()
         {
-            HttpResponseMessage response = await client.PostAsync("http://127.0.0.1:" + MainWindow.settings.webPort + "/api/v1/execution-flow?function=<resume>&type=-", null);
+            HttpResponseMessage response = await client.PostAsync("http://127.0.0.1:" + MainWindow.settings.webPort + "/api/v1/execution-flow?function=resume", null);
             response.EnsureSuccessStatusCode();
         }
         static async internal Task Write(uint offset, byte val)
