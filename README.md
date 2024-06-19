@@ -1,6 +1,6 @@
-![Screen Editor Pic](TeheManX4/Resources/Repro/screenEditor.png)
-![Sprite Editor Pic](TeheManX4/Resources/Repro/spriteEditor.png)
-![Text Editor Pic](TeheManX4/Resources/Repro/textEditor.png)
+![Screen Editor Pic](TeheManX4/Resources/Repro/screenEditor.PNG)
+![Sprite Editor Pic](TeheManX4/Resources/Repro/spriteEditor.PNG)
+![Text Editor Pic](TeheManX4/Resources/Repro/textEditor.PNG)
 
 # TeheManX4 Editor
 Level Editor for the PS1 Version of Mega Man X4 which comes packed 
