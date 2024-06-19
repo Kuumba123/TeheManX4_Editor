@@ -615,8 +615,15 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Resources\Repro\" />
+    <Resource Include="Resources\Repro\spriteEditor.PNG" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Repro\textEditor.PNG" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Repro\screenEditor.PNG" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
